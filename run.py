@@ -15,12 +15,12 @@ class RequestMethod(Enum):
     HEAD = 'HEAD'
 
 
-def perform_request(url: str, method: RequestMethod, search_string: str = '', timeout: int = 5):
+def perform_request(url: str, method: RequestMethod, search_string: str = '', timeout: int = 5, post_data: str = None):
     try:
         if method == RequestMethod.GET:
             response = requests.get(url, timeout=timeout)
         elif method == RequestMethod.POST:
-            response = requests.post(url, timeout=timeout)
+            response = requests.post(url, data=post_data, timeout=timeout)
         elif method == RequestMethod.HEAD:
             response = requests.head(url, timeout=timeout)
         else:
@@ -29,7 +29,7 @@ def perform_request(url: str, method: RequestMethod, search_string: str = '', ti
         response.raise_for_status()  # Raise an error for bad status codes
 
         # Only search for the string if it's a GET or POST request
-        if method in {RequestMethod.GET, RequestMethod.POST} and search_string not in response.text:
+        if method in {RequestMethod.GET, RequestMethod.POST} and search_string and search_string not in response.text:
             return f"Search string '{search_string}' not found in the response."
 
         return None
@@ -85,9 +85,10 @@ def main():
         search_string = site.get('search_string', '')
         timeout = site['timeout']
         schedule = site.get('schedule', '* * * * *')
+        post_data = site.get('post_data', None)
 
         if should_run(schedule):
-            result = perform_request(url, method, search_string, timeout)
+            result = perform_request(url, method, search_string, timeout, post_data)
 
             if result:
                 print(f"Error for {site_name}: {result}")
