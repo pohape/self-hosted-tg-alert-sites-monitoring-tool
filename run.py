@@ -1,10 +1,10 @@
+import json
 import os
 import yaml
 import requests
 from enum import Enum
 from datetime import datetime
 from croniter import croniter
-import time
 
 config_file_name = 'config.yaml'
 
@@ -43,6 +43,29 @@ def should_run(schedule: str) -> bool:
     cron = croniter(schedule, base_time)
 
     return cron.get_prev(datetime) == base_time or cron.get_next(datetime) == base_time
+
+
+def tg_bot_send_message(bot_token, chat_id, message):
+    url = 'https://api.telegram.org/bot{}/sendMessage'.format(bot_token)
+
+    data = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "MarkdownV2"
+    }
+
+    response = requests.post(
+        url,
+        headers={"Content-Type": "application/json"},
+        data=json.dumps(data)
+    )
+
+    response_parsed = response.json()
+
+    if response_parsed['ok']:
+        return None
+    else:
+        return response_parsed['description']
 
 
 def main():
