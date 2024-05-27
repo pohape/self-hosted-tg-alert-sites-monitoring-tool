@@ -1,8 +1,10 @@
 import os
-
 import yaml
 import requests
 from enum import Enum
+from datetime import datetime
+from croniter import croniter
+import time
 
 config_file_name = 'config.yaml'
 
@@ -25,7 +27,6 @@ def perform_request(url: str, method: RequestMethod, search_string: str = '', ti
             return "Invalid request method."
 
         response.raise_for_status()  # Raise an error for bad status codes
-        print(response.text)
 
         # Only search for the string if it's a GET or POST request
         if method in {RequestMethod.GET, RequestMethod.POST} and search_string not in response.text:
@@ -37,10 +38,16 @@ def perform_request(url: str, method: RequestMethod, search_string: str = '', ti
         return f"An error occurred: {e}"
 
 
+def should_run(schedule: str) -> bool:
+    base_time = datetime.now().replace(second=0, microsecond=0)
+    cron = croniter(schedule, base_time)
+
+    return cron.get_prev(datetime) == base_time or cron.get_next(datetime) == base_time
+
+
 def main():
     # Load the configuration file
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = script_dir + '/' + config_file_name
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), config_file_name)
 
     if not os.path.isfile(config_path):
         exit(config_path + ' not found')
@@ -54,13 +61,15 @@ def main():
         method = RequestMethod[site['method']]
         search_string = site.get('search_string', '')
         timeout = site['timeout']
+        schedule = site.get('schedule', '* * * * *')
 
-        result = perform_request(url, method, search_string, timeout)
+        if should_run(schedule):
+            result = perform_request(url, method, search_string, timeout)
 
-        if result:
-            print(f"Error for {url}: {result}")
-        else:
-            print(f"Request to {url} completed successfully.")
+            if result:
+                print(f"Error for {url}: {result}")
+            else:
+                print(f"Request to {url} completed successfully.")
 
 
 if __name__ == "__main__":
