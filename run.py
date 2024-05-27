@@ -79,7 +79,7 @@ def main():
         config = yaml.safe_load(file)
 
     # Process each site in the configuration
-    for site in config['sites']:
+    for site_name, site in config['sites'].items():
         url = site['url']
         method = RequestMethod[site['method']]
         search_string = site.get('search_string', '')
@@ -90,9 +90,9 @@ def main():
             result = perform_request(url, method, search_string, timeout)
 
             if result:
-                print(f"Error for {url}: {result}")
+                print(f"Error for {site_name}: {result}")
             else:
-                print(f"Request to {url} completed successfully.")
+                print(f"Request to {site_name} completed successfully.")
 
 
 if __name__ == "__main__":
