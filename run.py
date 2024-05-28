@@ -45,6 +45,41 @@ def should_run(schedule: str) -> bool:
     return cron.get_prev(datetime) == base_time or cron.get_next(datetime) == base_time
 
 
+def escape_special_chars(text):
+    special_chars = [
+        '\\',
+        '_',
+        '~',
+        '`',
+        '>',
+        '<',
+        '&',
+        '#',
+        '+',
+        '-',
+        '=',
+        '|',
+        '{',
+        '}',
+        '.',
+        '!',
+        '$',
+        '@',
+        '[',
+        ']',
+        '(',
+        ')',
+        '^',
+    ]
+
+    text = str(text)
+
+    for special_char in special_chars:
+        text = text.replace(special_char, '\\' + special_char)
+
+    return text
+
+
 def tg_bot_send_message(bot_token, chat_id, message):
     url = 'https://api.telegram.org/bot{}/sendMessage'.format(bot_token)
 
@@ -78,6 +113,8 @@ def main():
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
 
+    bot_token = config['telegram_bot_token']
+
     # Process each site in the configuration
     for site_name, site in config['sites'].items():
         url = site['url']
@@ -86,12 +123,23 @@ def main():
         timeout = site['timeout']
         schedule = site.get('schedule', '* * * * *')
         post_data = site.get('post_data', None)
+        tg_chats_to_notify = site.get('tg_chats_to_notify', [])
 
         if should_run(schedule):
-            result = perform_request(url, method, search_string, timeout, post_data)
+            error_message = perform_request(url, method, search_string, timeout, post_data)
 
-            if result:
-                print(f"Error for {site_name}: {result}")
+            if error_message:
+                for chat_id in tg_chats_to_notify:
+                    error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
+                        escape_special_chars(site_name),
+                        error_message.strip()
+                    )
+
+                    print(error_message_for_tg)
+                    tg_sending_error = tg_bot_send_message(bot_token, chat_id, error_message_for_tg)
+
+                    if tg_sending_error:
+                        print(f"Failed to send message to {chat_id}: {tg_sending_error}")
             else:
                 print(f"Request to {site_name} completed successfully.")
 
