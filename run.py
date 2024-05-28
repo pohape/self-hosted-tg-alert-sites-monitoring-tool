@@ -129,13 +129,15 @@ def main():
             error_message = perform_request(url, method, search_string, timeout, post_data)
 
             if error_message:
+                error_message = error_message.strip()
+                print('Error for {}: {}'.format(site_name, error_message))
+
                 for chat_id in tg_chats_to_notify:
                     error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
                         escape_special_chars(site_name),
-                        error_message.strip()
+                        error_message
                     )
 
-                    print(error_message_for_tg)
                     tg_sending_error = tg_bot_send_message(bot_token, chat_id, error_message_for_tg)
 
                     if tg_sending_error:
