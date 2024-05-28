@@ -2,6 +2,7 @@ import json
 import os
 import yaml
 import requests
+import argparse
 from enum import Enum
 from datetime import datetime
 from croniter import croniter
@@ -104,6 +105,11 @@ def tg_bot_send_message(bot_token, chat_id, message):
 
 
 def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Run site monitoring script.')
+    parser.add_argument('--telegram-test', action='store_true', help='Test sending messages to Telegram chats')
+    args = parser.parse_args()
+
     # Load the configuration file
     config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), config_file_name)
 
@@ -113,9 +119,32 @@ def main():
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
 
-    bot_token = config['telegram_bot_token']
+    if args.telegram_test:
+        telegram_test(config)
+    else:
+        process_each_site(config)
 
-    # Process each site in the configuration
+
+def telegram_test(config):
+    # Collect all unique chat IDs
+    chat_ids = set()
+
+    for site in config['sites'].values():
+        chat_ids.update(site.get('tg_chats_to_notify', []))
+
+    # Send test message to each chat
+    test_message = escape_special_chars('This is a test message from the monitoring script.')
+
+    for chat_id in chat_ids:
+        result = tg_bot_send_message(config['telegram_bot_token'], chat_id, test_message)
+
+        if result:
+            print(f"Failed to send test message to {chat_id}: {result}")
+        else:
+            print(f"Test message sent to {chat_id} successfully.")
+
+
+def process_each_site(config):
     for site_name, site in config['sites'].items():
         url = site['url']
         method = RequestMethod[site['method']]
@@ -138,7 +167,7 @@ def main():
                         error_message
                     )
 
-                    tg_sending_error = tg_bot_send_message(bot_token, chat_id, error_message_for_tg)
+                    tg_sending_error = tg_bot_send_message(config['telegram_bot_token'], chat_id, error_message_for_tg)
 
                     if tg_sending_error:
                         print(f"Failed to send message to {chat_id}: {tg_sending_error}")
