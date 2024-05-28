@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import yaml
 import requests
 import argparse
@@ -104,10 +105,22 @@ def tg_bot_send_message(bot_token, chat_id, message):
         return response_parsed['description']
 
 
+def get_updates(telegram_bot_token, offset=None):
+    params = {'timeout': 100, 'offset': offset}
+    response = requests.get(f'https://api.telegram.org/bot{telegram_bot_token}/getUpdates', params=params)
+
+    return response.json()
+
+
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Run site monitoring script.')
-    parser.add_argument('--telegram-test', action='store_true', help='Test sending messages to Telegram chats')
+    parser.add_argument('--telegram-test',
+                        action='store_true',
+                        help='Test sending messages to all Telegram chats found in the config file')
+    parser.add_argument('--telegram-id-bot',
+                        action='store_true',
+                        help='A bot that replies with the user ID  using long polling')
     args = parser.parse_args()
 
     # Load the configuration file
@@ -121,8 +134,35 @@ def main():
 
     if args.telegram_test:
         telegram_test(config)
+    elif args.telegram_id_bot:
+        telegram_id_bot(config)
     else:
         process_each_site(config)
+
+
+def telegram_id_bot(config):
+    last_update_id = None
+
+    while True:
+        updates = get_updates(config['telegram_bot_token'], last_update_id)
+
+        if not updates['ok']:
+            print('Telegram error:')
+            exit(updates)
+        elif 'result' in updates and updates['result']:
+            for update in updates['result']:
+                message = update.get('message')
+
+                if message:
+                    chat_id = message['chat']['id']
+                    user_id = message['from']['id']
+                    response_text = f'Your user ID is `{user_id}`'
+
+                    print(response_text)
+
+                    tg_bot_send_message(config['telegram_bot_token'], chat_id, response_text)
+                    last_update_id = update['update_id'] + 1
+        time.sleep(0.1)
 
 
 def telegram_test(config):
