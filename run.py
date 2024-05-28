@@ -1,12 +1,13 @@
-import json
-import os
-import time
-import yaml
-import requests
 import argparse
-from enum import Enum
+import os
 from datetime import datetime
+from enum import Enum
+
+import requests
+import yaml
 from croniter import croniter
+
+import telegram_helper
 
 config_file_name = 'config.yaml'
 
@@ -47,71 +48,6 @@ def should_run(schedule: str) -> bool:
     return cron.get_prev(datetime) == base_time or cron.get_next(datetime) == base_time
 
 
-def escape_special_chars(text):
-    special_chars = [
-        '\\',
-        '_',
-        '~',
-        '`',
-        '>',
-        '<',
-        '&',
-        '#',
-        '+',
-        '-',
-        '=',
-        '|',
-        '{',
-        '}',
-        '.',
-        '!',
-        '$',
-        '@',
-        '[',
-        ']',
-        '(',
-        ')',
-        '^',
-    ]
-
-    text = str(text)
-
-    for special_char in special_chars:
-        text = text.replace(special_char, '\\' + special_char)
-
-    return text
-
-
-def tg_bot_send_message(bot_token, chat_id, message):
-    url = 'https://api.telegram.org/bot{}/sendMessage'.format(bot_token)
-
-    data = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "MarkdownV2"
-    }
-
-    response = requests.post(
-        url,
-        headers={"Content-Type": "application/json"},
-        data=json.dumps(data)
-    )
-
-    response_parsed = response.json()
-
-    if response_parsed['ok']:
-        return None
-    else:
-        return response_parsed['description']
-
-
-def get_updates(telegram_bot_token, offset=None):
-    params = {'timeout': 100, 'offset': offset}
-    response = requests.get(f'https://api.telegram.org/bot{telegram_bot_token}/getUpdates', params=params)
-
-    return response.json()
-
-
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Run site monitoring script.')
@@ -133,55 +69,11 @@ def main():
         config = yaml.safe_load(file)
 
     if args.telegram_test:
-        telegram_test(config)
+        telegram_helper.test(config)
     elif args.telegram_id_bot:
-        telegram_id_bot(config)
+        telegram_helper.id_bot(config)
     else:
         process_each_site(config)
-
-
-def telegram_id_bot(config):
-    last_update_id = None
-
-    while True:
-        updates = get_updates(config['telegram_bot_token'], last_update_id)
-
-        if not updates['ok']:
-            print('Telegram error:')
-            exit(updates)
-        elif 'result' in updates and updates['result']:
-            for update in updates['result']:
-                message = update.get('message')
-
-                if message:
-                    chat_id = message['chat']['id']
-                    user_id = message['from']['id']
-                    response_text = f'Your user ID is `{user_id}`'
-
-                    print(response_text)
-
-                    tg_bot_send_message(config['telegram_bot_token'], chat_id, response_text)
-                    last_update_id = update['update_id'] + 1
-        time.sleep(0.1)
-
-
-def telegram_test(config):
-    # Collect all unique chat IDs
-    chat_ids = set()
-
-    for site in config['sites'].values():
-        chat_ids.update(site.get('tg_chats_to_notify', []))
-
-    # Send test message to each chat
-    test_message = escape_special_chars('This is a test message from the monitoring script.')
-
-    for chat_id in chat_ids:
-        result = tg_bot_send_message(config['telegram_bot_token'], chat_id, test_message)
-
-        if result:
-            print(f"Failed to send test message to {chat_id}: {result}")
-        else:
-            print(f"Test message sent to {chat_id} successfully.")
 
 
 def process_each_site(config):
@@ -203,14 +95,11 @@ def process_each_site(config):
 
                 for chat_id in tg_chats_to_notify:
                     error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
-                        escape_special_chars(site_name),
+                        telegram_helper.escape_special_chars(site_name),
                         error_message
                     )
 
-                    tg_sending_error = tg_bot_send_message(config['telegram_bot_token'], chat_id, error_message_for_tg)
-
-                    if tg_sending_error:
-                        print(f"Failed to send message to {chat_id}: {tg_sending_error}")
+                    telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_message_for_tg)
             else:
                 print(f"Request to {site_name} completed successfully.")
 
