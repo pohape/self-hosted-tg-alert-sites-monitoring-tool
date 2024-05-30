@@ -74,3 +74,28 @@ python3 run.py --id-bot-mode
 ```shell
 python3 run.py --force
 ```
+
+### Configuration
+The configuration is done through the **config.yaml** file. Below is an example configuration:
+
+```yaml
+telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+sites:
+  main_page:
+    url: "https://example.com/"
+    method: "GET"
+    search_string: "Example Domain"
+    timeout: 5
+    schedule: '* * * * *'
+    tg_chats_to_notify:
+      - '123456789'
+      - '-568546249'
+```
+- **telegram_bot_token**: Your Telegram bot token obtained from @BotFather.
+- **sites**: A list of sites to monitor.
+- **url**: The URL of the site to monitor.
+- **method**: The HTTP method to use (GET, POST, HEAD).
+- **search_string**: The string to search for in the response (for GET and POST requests).
+- **timeout**: The timeout for the request in seconds.
+- **schedule**: The cron-like schedule for monitoring the site.
+- **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
