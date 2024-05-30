@@ -20,9 +20,9 @@ pip3 install -r requirements.txt
 ```shell
 echo "telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'" > config.yaml
 ```
-##### 3. Run the script with the --telegram-id-bot option to get your chat ID:
+##### 3. Run the script with the --id-bot-mode option to get your chat ID:
 ```shell
-python3 run.py --telegram-id-bot
+python3 run.py --id-bot-mode
 ```
 Obtain your user or chat ID by sending a message to the bot or forwarding a message to the bot running in this mode. Then press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop the bot.
 ##### 4. Update the config.yaml file with your bot token and add a site to monitor:

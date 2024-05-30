@@ -54,7 +54,7 @@ def main():
     parser.add_argument('--telegram-test',
                         action='store_true',
                         help='Test sending messages to all Telegram chats found in the config file')
-    parser.add_argument('--telegram-id-bot',
+    parser.add_argument('--id-bot-mode',
                         action='store_true',
                         help='A bot that replies with the user ID using long polling')
     parser.add_argument('--force',
@@ -73,7 +73,7 @@ def main():
 
     if args.telegram_test:
         telegram_helper.test(config)
-    elif args.telegram_id_bot:
+    elif args.id_bot_mode:
         telegram_helper.id_bot(config)
     else:
         process_each_site(config, force=args.force)
