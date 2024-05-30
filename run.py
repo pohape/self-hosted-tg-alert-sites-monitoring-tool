@@ -51,7 +51,7 @@ def should_run(schedule: str) -> bool:
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Run site monitoring script.')
-    parser.add_argument('--telegram-test',
+    parser.add_argument('--test-notifications',
                         action='store_true',
                         help='Test sending messages to all Telegram chats found in the config file')
     parser.add_argument('--id-bot-mode',
@@ -71,8 +71,8 @@ def main():
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
 
-    if args.telegram_test:
-        telegram_helper.test(config)
+    if args.test_notifications:
+        telegram_helper.test_notifications(config)
     elif args.id_bot_mode:
         telegram_helper.id_bot(config)
     else:

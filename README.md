@@ -38,9 +38,9 @@ sites:
     tg_chats_to_notify:
       - '123456789'
 ```
-##### 5. Test sending messages to all Telegram chats specified in the configuration:
+##### 5. Test sending notifications to all Telegram chats specified in the configuration:
 ```shell
-python3 run.py --telegram-test
+python3 run.py --test-notifications
 ```
 This will send a test message to all chat IDs listed in the **tg_chats_to_notify** section of the configuration file. You will see a full Telegram API error text if something won't succeed. In case of failure, the full Telegram API error text will be shown, allowing you to debug easily.
 ##### 6. Run the script once manually to check all sites immediately:

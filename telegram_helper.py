@@ -25,7 +25,7 @@ def id_bot(config):
         time.sleep(0.1)
 
 
-def test(config):
+def test_notifications(config):
     # Collect all unique chat IDs
     chat_ids = set()
 
