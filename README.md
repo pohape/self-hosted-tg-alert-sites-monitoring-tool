@@ -9,7 +9,7 @@ This is a self-hosted site monitoring tool that checks the availability of websi
 - Customizable through a YAML configuration file
 - Offers debug modes to effortlessly identify required Telegram chat IDs, debug Telegram API token configuration and test everything without hassle
 
-### Installation
+### Quick start
 ##### 1. Clone the repository and install the required Python packages:
 ```shell
 git clone https://github.com/pohape/self-hosted-tg-alert-sites-monitoring-tool
@@ -25,3 +25,16 @@ echo "telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'" > config.yaml
 python3 run.py --telegram-id-bot
 ```
 Obtain your user or chat ID by sending a message to the bot or forwarding a message to the bot running in this mode. Then press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop the bot.
+##### 4. Update the config.yaml file with your bot token and add a site to monitor:
+```yaml
+telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+sites:
+  main_page:
+    url: "https://example.com/"
+    method: "GET"
+    search_string: "Example Domain"
+    timeout: 5
+    schedule: '* * * * *'
+    tg_chats_to_notify:
+      - '123456789'
+```
