@@ -56,3 +56,48 @@ Add the following line:
 ```shell
 * * * * * python3 /path/to/self-hosted-tg-alert-sites-monitoring-tool/run.py
 ```
+
+### Usage
+##### To run the script normally, simply execute:
+```shell
+python3 run.py
+```
+##### To test Telegram notifications:
+```shell
+python3 run.py --test-notifications
+```
+##### To start the Telegram bot that replies with user IDs using long polling:
+```shell
+python3 run.py --id-bot-mode
+```
+##### To force check all sites immediately:
+```shell
+python3 run.py --force
+```
+
+### Configuration
+The configuration is done through the **config.yaml** file. Below is an example configuration:
+
+```yaml
+telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+sites:
+  api_status:
+    url: "https://api.example.com/status"
+    method: "POST"
+    post_data: '{"some_json_key": "some_json_value"}'
+    search_string: "OK"
+    timeout: 5
+    schedule: '* * * * *'
+    tg_chats_to_notify:
+      - '123456789'
+      - '-568546249'
+```
+- **telegram_bot_token**: Your Telegram bot token obtained from @BotFather.
+- **sites**: A list of sites to monitor.
+- **url**: The URL of the site to monitor.
+- **method**: The HTTP method to use (GET, POST, HEAD).
+- **post_data**: Only for the POST method.
+- **search_string**: The string to search for in the response (for GET and POST requests).
+- **timeout**: The timeout for the request in seconds.
+- **schedule**: The cron-like schedule for monitoring the site.
+- **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
