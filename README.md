@@ -56,3 +56,21 @@ Add the following line:
 ```shell
 * * * * * python3 /path/to/self-hosted-tg-alert-sites-monitoring-tool/run.py
 ```
+
+### Usage
+##### To run the script normally, simply execute:
+```shell
+python3 run.py
+```
+##### To test Telegram notifications:
+```shell
+python3 run.py --test-notifications
+```
+##### To start the Telegram bot that replies with user IDs using long polling:
+```shell
+python3 run.py --id-bot-mode
+```
+##### To force check all sites immediately:
+```shell
+python3 run.py --force
+```
