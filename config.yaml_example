@@ -1,0 +1,34 @@
+telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+sites:
+  main_page:
+    url: "https://example.com/"
+    method: "GET"
+    search_string: "Example Domain"
+    timeout: 5
+    schedule: '* * * * *'
+    tg_chats_to_notify:
+      - '123456789'
+      - '-568546249'
+  api_status:
+    url: "https://api.example.com/status"
+    method: "POST"
+    post_data: '{"some_json_key": "some_json_value"}'
+    search_string: "OK"
+    timeout: 1
+    schedule: '5,20,35,50 * * * *'
+    tg_chats_to_notify:
+      - '546623545'
+  logo:
+    url: "https://example.com/logo.png"
+    method: "HEAD"
+    timeout: 1
+    schedule: '10 10 * * *'
+    tg_chats_to_notify:
+      - '-568546249'
+  privacy_policy:
+    url: "https://example.com/privacy_policy.pdf"
+    method: "HEAD"
+    timeout: 1
+    schedule: '11 10 * * *'
+    tg_chats_to_notify:
+      - '-568546249'
