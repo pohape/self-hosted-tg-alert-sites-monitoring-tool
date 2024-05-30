@@ -81,10 +81,11 @@ The configuration is done through the **config.yaml** file. Below is an example 
 ```yaml
 telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
 sites:
-  main_page:
-    url: "https://example.com/"
-    method: "GET"
-    search_string: "Example Domain"
+  api_status:
+    url: "https://api.example.com/status"
+    method: "POST"
+    post_data: '{"some_json_key": "some_json_value"}'
+    search_string: "OK"
     timeout: 5
     schedule: '* * * * *'
     tg_chats_to_notify:
@@ -95,6 +96,7 @@ sites:
 - **sites**: A list of sites to monitor.
 - **url**: The URL of the site to monitor.
 - **method**: The HTTP method to use (GET, POST, HEAD).
+- **post_data**: Only for the POST method.
 - **search_string**: The string to search for in the response (for GET and POST requests).
 - **timeout**: The timeout for the request in seconds.
 - **schedule**: The cron-like schedule for monitoring the site.
