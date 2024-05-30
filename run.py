@@ -56,7 +56,10 @@ def main():
                         help='Test sending messages to all Telegram chats found in the config file')
     parser.add_argument('--telegram-id-bot',
                         action='store_true',
-                        help='A bot that replies with the user ID  using long polling')
+                        help='A bot that replies with the user ID using long polling')
+    parser.add_argument('--force',
+                        action='store_true',
+                        help='Force check all sites immediately, regardless of the schedule')
     args = parser.parse_args()
 
     # Load the configuration file
@@ -73,10 +76,10 @@ def main():
     elif args.telegram_id_bot:
         telegram_helper.id_bot(config)
     else:
-        process_each_site(config)
+        process_each_site(config, force=args.force)
 
 
-def process_each_site(config):
+def process_each_site(config, force=False):
     for site_name, site in config['sites'].items():
         url = site['url']
         method = RequestMethod[site['method']]
@@ -86,7 +89,7 @@ def process_each_site(config):
         post_data = site.get('post_data', None)
         tg_chats_to_notify = site.get('tg_chats_to_notify', [])
 
-        if should_run(schedule):
+        if force or should_run(schedule):
             error_message = perform_request(url, method, search_string, timeout, post_data)
 
             if error_message:
