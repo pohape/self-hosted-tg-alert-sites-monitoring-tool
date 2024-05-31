@@ -69,6 +69,14 @@ def color_text(text, color: Color):
     print(f"\033[{color.value}m{text}\033[0m")
 
 
+def check_chat_id_validity(chat_id):
+    return isinstance(chat_id, int) or (isinstance(chat_id, str) and chat_id.lstrip('-').isdigit())
+
+
+def get_uniq_chat_ids(chat_ids):
+    return set(map(str, chat_ids))
+
+
 def check_config(config):
     report = {}
 
@@ -83,12 +91,14 @@ def check_config(config):
             if field_name not in site:
                 report[site_name][Color.RED][field_name] = 'required field not found, you need to add it'
             elif field_name == 'tg_chats_to_notify':
-                lst = site[field_name]
+                chat_id_list = site[field_name]
 
-                if not isinstance(lst, list):
+                if not isinstance(chat_id_list, list):
                     report[site_name][Color.RED][field_name] = 'must be a list of at least one chat ID'
-                elif not all(isinstance(i, int) or (isinstance(i, str) and i.isdigit()) for i in lst) or not lst:
+                elif not all(check_chat_id_validity(chat_id) for chat_id in chat_id_list) or not chat_id_list:
                     report[site_name][Color.RED][field_name] = 'chat IDs must contain only digits'
+                else:
+                    report[site_name][Color.GREEN][field_name] = ', '.join(get_uniq_chat_ids(chat_id_list))
         for field_name in site:
             if field_name not in REQUIRED_FIELDS and field_name not in DEFAULT:
                 report[site_name][Color.YELLOW][field_name] = 'unknown field, ignored'
@@ -149,7 +159,7 @@ def main():
         config = yaml.safe_load(file)
 
     if args.test_notifications:
-        telegram_helper.test_notifications(config)
+        telegram_helper.test_notifications(config, get_uniq_chat_ids)
     elif args.id_bot_mode:
         telegram_helper.id_bot(config)
     elif args.check_config:
@@ -174,7 +184,7 @@ def process_each_site(config, force=False):
                 error_message = error_message.strip()
                 print('Error for {}: {}'.format(site_name, error_message))
 
-                for chat_id in site['tg_chats_to_notify']:
+                for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                     error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
                         telegram_helper.escape_special_chars(site_name),
                         error_message

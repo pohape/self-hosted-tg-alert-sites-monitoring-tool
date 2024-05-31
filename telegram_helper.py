@@ -25,12 +25,12 @@ def id_bot(config):
         time.sleep(0.1)
 
 
-def test_notifications(config):
+def test_notifications(config, get_uniq_chat_ids):
     # Collect all unique chat IDs
     chat_ids = set()
 
     for site in config['sites'].values():
-        chat_ids.update(site.get('tg_chats_to_notify', []))
+        chat_ids.update(get_uniq_chat_ids(site['tg_chats_to_notify']))
 
     # Send test message to each chat
     test_message = escape_special_chars('This is a test message from the monitoring script.')
