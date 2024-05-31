@@ -174,7 +174,7 @@ def process_each_site(config, force=False):
                 error_message = error_message.strip()
                 print('Error for {}: {}'.format(site_name, error_message))
 
-                for chat_id in site.get('tg_chats_to_notify', DEFAULT['tg_chats_to_notify']):
+                for chat_id in site['tg_chats_to_notify']:
                     error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
                         telegram_helper.escape_special_chars(site_name),
                         error_message
