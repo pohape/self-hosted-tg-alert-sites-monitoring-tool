@@ -13,6 +13,7 @@ CONFIG_FILE_NAME = 'config.yaml'
 DEFAULT_SCHEDULE = '* * * * *'
 DEFAULT_TIMEOUT = 5
 DEFAULT_METHOD = 'GET'
+DEFAULT_STATUS_CODE = 200
 
 
 class RequestMethod(Enum):
@@ -21,7 +22,7 @@ class RequestMethod(Enum):
     HEAD = 'HEAD'
 
 
-def perform_request(url: str, method: RequestMethod, search_string: str = '', timeout: int = 5, post_data: str = None):
+def perform_request(url: str, method: RequestMethod, status_code: int, search: str, timeout: int, post_data: str):
     try:
         if method == RequestMethod.GET:
             response = requests.get(url, timeout=timeout)
@@ -32,11 +33,12 @@ def perform_request(url: str, method: RequestMethod, search_string: str = '', ti
         else:
             return "Invalid request method."
 
-        response.raise_for_status()  # Raise an error for bad status codes
+        if response.status_code != status_code:
+            return f"Expected status code '{status_code}', but got '{response.status_code}'"
 
         # Only search for the string if it's a GET or POST request
-        if method in {RequestMethod.GET, RequestMethod.POST} and search_string and search_string not in response.text:
-            return f"Search string '{search_string}' not found in the response."
+        if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in response.text:
+            return f"Search string '{search}' not found in the response."
 
         return None
 
@@ -88,7 +90,8 @@ def process_each_site(config, force=False):
             error_message = perform_request(
                 url=site['url'],
                 method=RequestMethod[site.get('method', DEFAULT_METHOD)],
-                search_string=site.get('search_string', ''),
+                status_code=site.get('expected_status_code', DEFAULT_STATUS_CODE),
+                search=site.get('search_string', ''),
                 timeout=site.get('timeout', DEFAULT_TIMEOUT),
                 post_data=site.get('post_data', None)
             )
