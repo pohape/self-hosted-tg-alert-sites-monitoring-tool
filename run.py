@@ -10,7 +10,7 @@ from croniter import croniter
 import telegram_helper
 
 CONFIG_FILE_NAME = 'config.yaml'
-REQUIRED_FIELDS = ['url']
+REQUIRED_FIELDS = ['url', 'tg_chats_to_notify']
 DEFAULT = {
     'timeout': 5,
     'schedule': '* * * * *',
@@ -18,7 +18,6 @@ DEFAULT = {
     'status_code': 200,
     'post_data': None,
     'search_string': '',
-    'tg_chats_to_notify': []
 }
 
 
@@ -83,7 +82,13 @@ def check_config(config):
         for field_name in REQUIRED_FIELDS:
             if field_name not in site:
                 report[site_name][Color.RED][field_name] = 'required field not found, you need to add it'
+            elif field_name == 'tg_chats_to_notify':
+                lst = site[field_name]
 
+                if not isinstance(lst, list):
+                    report[site_name][Color.RED][field_name] = 'must be a list of at least one chat ID'
+                elif not all(isinstance(i, int) or (isinstance(i, str) and i.isdigit()) for i in lst) or not lst:
+                    report[site_name][Color.RED][field_name] = 'chat IDs must be numbers'
         for field_name in site:
             if field_name not in REQUIRED_FIELDS and field_name not in DEFAULT:
                 report[site_name][Color.YELLOW][field_name] = 'unknown field, ignored'
