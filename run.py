@@ -29,6 +29,7 @@ class RequestMethod(Enum):
 
 
 class Color(Enum):
+    BOLD = 1
     RED = 91
     YELLOW = 93
     GREEN = 92
@@ -70,22 +71,38 @@ def color_text(text, color: Color):
 
 
 def check_config(config):
+    report = {}
+
     for site_name, site in config['sites'].items():
-        print(f"{site_name}:")
+        report[site_name] = {
+            Color.RED: {},
+            Color.YELLOW: {},
+            Color.GREEN: {},
+        }
 
         for field_name in REQUIRED_FIELDS:
             if field_name not in site:
-                color_text(f"  {field_name}: required field not found, you need to add it", Color.RED)
+                report[site_name][Color.RED][field_name] = 'required field not found, you need to add it'
 
         for field_name in site:
             if field_name not in REQUIRED_FIELDS and field_name not in DEFAULT:
-                color_text(f"  {field_name}: unknown field, ignored", Color.YELLOW)
+                report[site_name][Color.YELLOW][field_name] = 'unknown field, ignored'
 
         for field_name in DEFAULT:
             if field_name in site:
-                color_text(f"  {field_name}: {site[field_name]}", Color.GREEN)
+                report[site_name][Color.GREEN][field_name] = site[field_name]
             else:
-                color_text(f"  {field_name}: not found, default value is '{DEFAULT[field_name]}'", Color.YELLOW)
+                report[site_name][Color.YELLOW][field_name] = f"not found, default value is '{DEFAULT[field_name]}'"
+
+    print_check_config_report(report)
+
+
+def print_check_config_report(report):
+    for site_name, fields in report.items():
+        color_text(f"\n=== {site_name} ===", Color.BOLD)
+        for color, field_info in fields.items():
+            for field_name, message in field_info.items():
+                color_text(f"  {field_name}: {message}", color)
 
 
 def main():
