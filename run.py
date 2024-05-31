@@ -9,7 +9,10 @@ from croniter import croniter
 
 import telegram_helper
 
-config_file_name = 'config.yaml'
+CONFIG_FILE_NAME = 'config.yaml'
+DEFAULT_SCHEDULE = '* * * * *'
+DEFAULT_TIMEOUT = 5
+DEFAULT_METHOD = 'GET'
 
 
 class RequestMethod(Enum):
@@ -63,7 +66,7 @@ def main():
     args = parser.parse_args()
 
     # Load the configuration file
-    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), config_file_name)
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), CONFIG_FILE_NAME)
 
     if not os.path.isfile(config_path):
         exit(config_path + ' not found')
@@ -81,22 +84,20 @@ def main():
 
 def process_each_site(config, force=False):
     for site_name, site in config['sites'].items():
-        url = site['url']
-        method = RequestMethod[site['method']]
-        search_string = site.get('search_string', '')
-        timeout = site['timeout']
-        schedule = site.get('schedule', '* * * * *')
-        post_data = site.get('post_data', None)
-        tg_chats_to_notify = site.get('tg_chats_to_notify', [])
-
-        if force or should_run(schedule):
-            error_message = perform_request(url, method, search_string, timeout, post_data)
+        if force or should_run(site.get('schedule', DEFAULT_SCHEDULE)):
+            error_message = perform_request(
+                url=site['url'],
+                method=RequestMethod[site.get('method', DEFAULT_METHOD)],
+                search_string=site.get('search_string', ''),
+                timeout=site.get('timeout', DEFAULT_TIMEOUT),
+                post_data=site.get('post_data', None)
+            )
 
             if error_message:
                 error_message = error_message.strip()
                 print('Error for {}: {}'.format(site_name, error_message))
 
-                for chat_id in tg_chats_to_notify:
+                for chat_id in site.get('tg_chats_to_notify', []):
                     error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
                         telegram_helper.escape_special_chars(site_name),
                         error_message
