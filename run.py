@@ -69,6 +69,25 @@ def color_text(text, color: Color):
     print(f"\033[{color.value}m{text}\033[0m")
 
 
+def check_config(config):
+    for site_name, site in config['sites'].items():
+        print(f"{site_name}:")
+
+        for field_name in REQUIRED_FIELDS:
+            if field_name not in site:
+                color_text(f"  {field_name}: required field not found, you need to add it", Color.RED)
+
+        for field_name in site:
+            if field_name not in REQUIRED_FIELDS and field_name not in DEFAULT:
+                color_text(f"  {field_name}: unknown field, ignored", Color.YELLOW)
+
+        for field_name in DEFAULT:
+            if field_name in site:
+                color_text(f"  {field_name}: {site[field_name]}", Color.GREEN)
+            else:
+                color_text(f"  {field_name}: not found, default value is '{DEFAULT[field_name]}'", Color.YELLOW)
+
+
 def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Run site monitoring script.')
@@ -81,6 +100,9 @@ def main():
     parser.add_argument('--force',
                         action='store_true',
                         help='Force check all sites immediately, regardless of the schedule')
+    parser.add_argument('--check-config',
+                        action='store_true',
+                        help='Check configuration for each site and display missing or default values')
     args = parser.parse_args()
 
     # Load the configuration file
@@ -96,6 +118,8 @@ def main():
         telegram_helper.test_notifications(config)
     elif args.id_bot_mode:
         telegram_helper.id_bot(config)
+    elif args.check_config:
+        check_config(config)
     else:
         process_each_site(config, force=args.force)
 
