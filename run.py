@@ -100,13 +100,12 @@ def check_config(config):
                 method_is_post = site['method'].upper() == RequestMethod.POST.value if 'method' in site else False
                 post_data_specified = 'post_data' in site
 
-                if method_is_post:
-                    if post_data_specified:
-                        report[site_name][Color.SUCCESS][field_name] = site[field_name]
-                    else:
-                        report[site_name][Color.WARNING][field_name] = 'the method is POST, but no post_data specified'
-                        report[site_name][Color.WARNING][field_name] += ', are you sure this is what you want?'
-                elif post_data_specified:
+                if method_is_post and post_data_specified:
+                    report[site_name][Color.SUCCESS][field_name] = site[field_name]
+                elif method_is_post and not post_data_specified:
+                    report[site_name][Color.WARNING][field_name] = 'the method is POST, but no post_data specified, '
+                    report[site_name][Color.WARNING][field_name] += 'are you sure this is what you want?'
+                elif not method_is_post and post_data_specified:
                     report[site_name][Color.WARNING][field_name] = 'ignored because the method is not POST'
             elif field_name in site:
                 if field_name == 'schedule' and not is_valid_cron(site['schedule']):
