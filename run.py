@@ -10,10 +10,6 @@ from croniter import croniter
 import telegram_helper
 
 CONFIG_FILE_NAME = 'config.yaml'
-DEFAULT_SCHEDULE = '* * * * *'
-DEFAULT_TIMEOUT = 5
-DEFAULT_METHOD = 'GET'
-DEFAULT_STATUS_CODE = 200
 REQUIRED_FIELDS = ['url']
 DEFAULT = {
     'timeout': 5,
