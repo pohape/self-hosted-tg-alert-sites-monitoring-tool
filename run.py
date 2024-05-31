@@ -89,6 +89,8 @@ def check_config(config):
                     report[site_name][Color.ERROR][field_name] = 'chat IDs must contain only digits'
                 else:
                     report[site_name][Color.SUCCESS][field_name] = ', '.join(get_uniq_chat_ids(chat_id_list))
+            else:
+                report[site_name][Color.SUCCESS][field_name] = site[field_name]
         for field_name in site:
             if field_name not in REQUIRED_FIELDS and field_name not in DEFAULT:
                 report[site_name][Color.WARNING][field_name] = 'unknown field, ignored'
@@ -97,6 +99,13 @@ def check_config(config):
             if field_name in site:
                 if field_name == 'schedule' and not is_valid_cron(site['schedule']):
                     report[site_name][Color.ERROR][field_name] = f"invalid cron syntax: '{site['schedule']}'"
+                elif field_name == 'method':
+                    method_upper = site[field_name].upper()
+
+                    if not any(method_upper == item.value for item in RequestMethod):
+                        report[site_name][Color.ERROR][field_name] = f"invalid method syntax: '{method_upper}'"
+                    else:
+                        report[site_name][Color.SUCCESS][field_name] = method_upper
                 else:
                     report[site_name][Color.SUCCESS][field_name] = site[field_name]
             else:
@@ -163,7 +172,7 @@ def process_each_site(config, force=False):
         if force or should_run(site.get('schedule', DEFAULT['schedule'])):
             error_message = perform_request(
                 url=site['url'],
-                method=RequestMethod[site.get('method', DEFAULT['method'])],
+                method=RequestMethod[site.get('method', DEFAULT['method']).upper()],
                 status_code=site.get('status_code', DEFAULT['status_code']),
                 search=site.get('search_string', DEFAULT['search_string']),
                 timeout=site.get('timeout', DEFAULT['timeout']),
