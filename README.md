@@ -113,6 +113,26 @@ python3 run.py --force
 ```shell
 python3 run.py --check-config
 ```
+```diff
+@@ home_page @@
+!  timeout: not found, default value is '5'
+!  status_code: not found, default value is '200'
+!  post_data: not found, default value is 'None'
+!  schedule: not found, default value is '* * * * *'
++  url: https://example.com/
++  tg_chats_to_notify: 5487855
++  method: GET
++  search_string: ENGLISH
+
+@@ not_found @@
+-  schedule: invalid cron syntax: '2 * * * '
+!  post_data: not found, default value is 'None'
++  url: https://example.com/qwerty
++  tg_chats_to_notify: -1831467, 5487855
++  timeout: 5
++  method: HEAD
++  status_code: 404
+```
 
 ### Configuration
 
