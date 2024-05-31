@@ -22,6 +22,12 @@ class RequestMethod(Enum):
     HEAD = 'HEAD'
 
 
+class Color(Enum):
+    RED = 91
+    YELLOW = 93
+    GREEN = 92
+
+
 def perform_request(url: str, method: RequestMethod, status_code: int, search: str, timeout: int, post_data: str):
     try:
         if method == RequestMethod.GET:
@@ -51,6 +57,10 @@ def should_run(schedule: str) -> bool:
     cron = croniter(schedule, base_time)
 
     return cron.get_prev(datetime) == base_time or cron.get_next(datetime) == base_time
+
+
+def color_text(text, color: Color):
+    print(f"\033[{color.value}m{text}\033[0m")
 
 
 def main():
