@@ -5,7 +5,7 @@ from enum import Enum
 
 import requests
 import yaml
-from croniter import croniter
+from croniter import croniter, CroniterBadCronError, CroniterBadDateError
 
 import telegram_helper
 
@@ -88,14 +88,17 @@ def check_config(config):
                 if not isinstance(lst, list):
                     report[site_name][Color.RED][field_name] = 'must be a list of at least one chat ID'
                 elif not all(isinstance(i, int) or (isinstance(i, str) and i.isdigit()) for i in lst) or not lst:
-                    report[site_name][Color.RED][field_name] = 'chat IDs must be numbers'
+                    report[site_name][Color.RED][field_name] = 'chat IDs must contain only digits'
         for field_name in site:
             if field_name not in REQUIRED_FIELDS and field_name not in DEFAULT:
                 report[site_name][Color.YELLOW][field_name] = 'unknown field, ignored'
 
         for field_name in DEFAULT:
             if field_name in site:
-                report[site_name][Color.GREEN][field_name] = site[field_name]
+                if field_name == 'schedule' and not is_valid_cron(site['schedule']):
+                    report[site_name][Color.RED][field_name] = f"invalid cron syntax: '{site['schedule']}'"
+                else:
+                    report[site_name][Color.GREEN][field_name] = site[field_name]
             else:
                 report[site_name][Color.YELLOW][field_name] = f"not found, default value is '{DEFAULT[field_name]}'"
 
@@ -108,6 +111,15 @@ def print_check_config_report(report):
         for color, field_info in fields.items():
             for field_name, message in field_info.items():
                 color_text(f"  {field_name}: {message}", color)
+
+
+def is_valid_cron(schedule: str) -> bool:
+    try:
+        croniter(schedule)
+
+        return True
+    except (CroniterBadCronError, CroniterBadDateError):
+        return False
 
 
 def main():
