@@ -107,6 +107,12 @@ python3 run.py --id-bot-mode
 ```shell
 python3 run.py --force
 ```
+```diff
++ Request to home_page completed successfully.
+
+- Error for not_found: Expected status code '404', but got '200'
++ A message with the error sent to 5487855 successfully
+```
 
 ##### To check the configuration for any issues:
 
