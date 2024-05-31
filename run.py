@@ -14,6 +14,16 @@ DEFAULT_SCHEDULE = '* * * * *'
 DEFAULT_TIMEOUT = 5
 DEFAULT_METHOD = 'GET'
 DEFAULT_STATUS_CODE = 200
+REQUIRED_FIELDS = ['url']
+DEFAULT = {
+    'timeout': 5,
+    'schedule': '* * * * *',
+    'method': 'GET',
+    'status_code': 200,
+    'post_data': None,
+    'search_string': '',
+    'tg_chats_to_notify': []
+}
 
 
 class RequestMethod(Enum):
@@ -96,21 +106,21 @@ def main():
 
 def process_each_site(config, force=False):
     for site_name, site in config['sites'].items():
-        if force or should_run(site.get('schedule', DEFAULT_SCHEDULE)):
+        if force or should_run(site.get('schedule', DEFAULT['schedule'])):
             error_message = perform_request(
                 url=site['url'],
-                method=RequestMethod[site.get('method', DEFAULT_METHOD)],
-                status_code=site.get('status_code', DEFAULT_STATUS_CODE),
-                search=site.get('search_string', ''),
-                timeout=site.get('timeout', DEFAULT_TIMEOUT),
-                post_data=site.get('post_data', None)
+                method=RequestMethod[site.get('method', DEFAULT['method'])],
+                status_code=site.get('status_code', DEFAULT['status_code']),
+                search=site.get('search_string', DEFAULT['search_string']),
+                timeout=site.get('timeout', DEFAULT['timeout']),
+                post_data=site.get('post_data', DEFAULT['post_data'])
             )
 
             if error_message:
                 error_message = error_message.strip()
                 print('Error for {}: {}'.format(site_name, error_message))
 
-                for chat_id in site.get('tg_chats_to_notify', []):
+                for chat_id in site.get('tg_chats_to_notify', DEFAULT['tg_chats_to_notify']):
                     error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
                         telegram_helper.escape_special_chars(site_name),
                         error_message
