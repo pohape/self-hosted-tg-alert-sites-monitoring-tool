@@ -19,6 +19,7 @@ git clone https://github.com/pohape/self-hosted-tg-alert-sites-monitoring-tool
 cd self-hosted-tg-alert-sites-monitoring-tool
 pip3 install -r requirements.txt
 ```
+
 ##### 2. Create a new bot by chatting with [@BotFather](https://t.me/BotFather) on Telegram. Follow the instructions to obtain your bot token. Add the token to the configuration file:
 
 ```shell
@@ -136,10 +137,10 @@ sites:
 - **telegram_bot_token**: Your Telegram bot token obtained from @BotFather.
 - **sites**: A list of sites to monitor.
 - **url**: The URL of the site to monitor.
-- **method** (optional): The HTTP method to use (GET, POST, HEAD).
+- **method** (optional, default is GET): The HTTP method to use (GET, POST, HEAD).
 - **post_data** (optional): Only for the POST method.
-- **status_code** (optional): An expected HTTP status code.
+- **status_code** (optional, default is 200): An expected HTTP status code.
 - **search_string** (optional): The string to search for in the response (for GET and POST requests).
-- **timeout** (optional): The timeout for the request in seconds.
-- **schedule** (optional): The cron-like schedule for monitoring the site.
+- **timeout** (optional, default is 5): The timeout for the request in seconds.
+- **schedule** (optional, default is '* * * * *'): The cron-like schedule for monitoring the site.
 - **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
