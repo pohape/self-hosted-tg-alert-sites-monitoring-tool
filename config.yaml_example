@@ -3,6 +3,7 @@ sites:
   main_page:
     url: "https://example.com/"
     method: "GET"
+    status_code: 200
     search_string: "Example Domain"
     timeout: 5
     schedule: '* * * * *'
@@ -13,6 +14,7 @@ sites:
     url: "https://api.example.com/status"
     method: "POST"
     post_data: '{"some_json_key": "some_json_value"}'
+    status_code: 200
     search_string: "OK"
     timeout: 1
     schedule: '5,20,35,50 * * * *'
@@ -30,5 +32,13 @@ sites:
     method: "HEAD"
     timeout: 1
     schedule: '11 10 * * *'
+    tg_chats_to_notify:
+      - '-568546249'
+not_found:
+    url: "https://example.com/qwerty"
+    method: "HEAD"
+    status_code: 404
+    search_string: "Not Found"
+    timeout: 1
     tg_chats_to_notify:
       - '-568546249'

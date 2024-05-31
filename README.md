@@ -38,10 +38,7 @@ telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
 sites:
   main_page:
     url: "https://example.com/"
-    method: "GET"
     search_string: "Example Domain"
-    timeout: 5
-    schedule: '* * * * *'
     tg_chats_to_notify:
       - '123456789'
 ```
@@ -127,6 +124,7 @@ sites:
     url: "https://api.example.com/status"
     method: "POST"
     post_data: '{"some_json_key": "some_json_value"}'
+    status_code: 200
     search_string: "OK"
     timeout: 5
     schedule: '* * * * *'
@@ -144,4 +142,4 @@ sites:
 - **search_string** (optional): The string to search for in the response (for GET and POST requests).
 - **timeout** (optional): The timeout for the request in seconds.
 - **schedule** (optional): The cron-like schedule for monitoring the site.
-- **tg_chats_to_notify** (optional): List of Telegram chat IDs to notify in case of an error.
+- **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
