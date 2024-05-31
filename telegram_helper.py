@@ -3,18 +3,20 @@ import time
 
 import requests
 
+from console_helper import Color, color_text
+
 
 def id_bot(config):
-    print('To see your user ID, go to Telegram and start the bot, and to view the ID of a message source, '
-          'forward a message from a group/channel or another user.')
+    color_text('To see your user ID, go to Telegram and start the bot, and to view the ID of a message source, '
+               'forward a message from a group/channel or another user.', Color.WARNING)
     last_update_id = None
 
     while True:
         updates = get_updates(config['telegram_bot_token'], last_update_id)
 
         if not updates['ok']:
-            print('Telegram error:')
-            exit(updates)
+            color_text('Telegram error: ' + str(updates), Color.ERROR)
+            exit()
         elif 'result' in updates and updates['result']:
             for update in updates['result']:
                 message = update.get('message')
@@ -92,11 +94,12 @@ def send_message(bot_token, chat_id, message):
     response_parsed = response.json()
 
     if response_parsed['ok']:
-        print(f"A message sent to {chat_id} successfully.")
+        color_text(f"A message sent to {chat_id} successfully:", Color.SUCCESS)
+        color_text(message, Color.QUOTATION)
 
         return None
     else:
-        print(f"Failed to send test message to {chat_id}: {response_parsed['description']}")
+        color_text(f"Failed to send test message to {chat_id}: {response_parsed['description']}", Color.ERROR)
 
         return response_parsed['description']
 
@@ -124,5 +127,4 @@ def handle_message(bot_token, message):
         user_id = message['from']['id']
         response_text = f'Your user ID is `{user_id}`'
 
-    print(response_text)
     send_message(bot_token, chat_id, response_text)

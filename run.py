@@ -8,6 +8,7 @@ import yaml
 from croniter import croniter, CroniterBadCronError, CroniterBadDateError
 
 import telegram_helper
+from console_helper import Color, color_text
 
 CONFIG_FILE_NAME = 'config.yaml'
 REQUIRED_FIELDS = ['url', 'tg_chats_to_notify']
@@ -25,13 +26,6 @@ class RequestMethod(Enum):
     GET = 'GET'
     POST = 'POST'
     HEAD = 'HEAD'
-
-
-class Color(Enum):
-    BOLD = 1
-    RED = 91
-    YELLOW = 93
-    GREEN = 92
 
 
 def perform_request(url: str, method: RequestMethod, status_code: int, search: str, timeout: int, post_data: str):
@@ -65,10 +59,6 @@ def should_run(schedule: str) -> bool:
     return cron.get_prev(datetime) == base_time or cron.get_next(datetime) == base_time
 
 
-def color_text(text, color: Color):
-    print(f"\033[{color.value}m{text}\033[0m")
-
-
 def check_chat_id_validity(chat_id):
     return isinstance(chat_id, int) or (isinstance(chat_id, str) and chat_id.lstrip('-').isdigit())
 
@@ -82,42 +72,42 @@ def check_config(config):
 
     for site_name, site in config['sites'].items():
         report[site_name] = {
-            Color.RED: {},
-            Color.YELLOW: {},
-            Color.GREEN: {},
+            Color.ERROR: {},
+            Color.WARNING: {},
+            Color.SUCCESS: {},
         }
 
         for field_name in REQUIRED_FIELDS:
             if field_name not in site:
-                report[site_name][Color.RED][field_name] = 'required field not found, you need to add it'
+                report[site_name][Color.ERROR][field_name] = 'required field not found, you need to add it'
             elif field_name == 'tg_chats_to_notify':
                 chat_id_list = site[field_name]
 
                 if not isinstance(chat_id_list, list):
-                    report[site_name][Color.RED][field_name] = 'must be a list of at least one chat ID'
+                    report[site_name][Color.ERROR][field_name] = 'must be a list of at least one chat ID'
                 elif not all(check_chat_id_validity(chat_id) for chat_id in chat_id_list) or not chat_id_list:
-                    report[site_name][Color.RED][field_name] = 'chat IDs must contain only digits'
+                    report[site_name][Color.ERROR][field_name] = 'chat IDs must contain only digits'
                 else:
-                    report[site_name][Color.GREEN][field_name] = ', '.join(get_uniq_chat_ids(chat_id_list))
+                    report[site_name][Color.SUCCESS][field_name] = ', '.join(get_uniq_chat_ids(chat_id_list))
         for field_name in site:
             if field_name not in REQUIRED_FIELDS and field_name not in DEFAULT:
-                report[site_name][Color.YELLOW][field_name] = 'unknown field, ignored'
+                report[site_name][Color.WARNING][field_name] = 'unknown field, ignored'
 
         for field_name in DEFAULT:
             if field_name in site:
                 if field_name == 'schedule' and not is_valid_cron(site['schedule']):
-                    report[site_name][Color.RED][field_name] = f"invalid cron syntax: '{site['schedule']}'"
+                    report[site_name][Color.ERROR][field_name] = f"invalid cron syntax: '{site['schedule']}'"
                 else:
-                    report[site_name][Color.GREEN][field_name] = site[field_name]
+                    report[site_name][Color.SUCCESS][field_name] = site[field_name]
             else:
-                report[site_name][Color.YELLOW][field_name] = f"not found, default value is '{DEFAULT[field_name]}'"
+                report[site_name][Color.WARNING][field_name] = f"not found, default value is '{DEFAULT[field_name]}'"
 
     print_check_config_report(report)
 
 
 def print_check_config_report(report):
     for site_name, fields in report.items():
-        color_text(f"\n=== {site_name} ===", Color.BOLD)
+        color_text(f"\n=== {site_name} ===", Color.TITLE)
         for color, field_info in fields.items():
             for field_name, message in field_info.items():
                 color_text(f"  {field_name}: {message}", color)
@@ -182,7 +172,7 @@ def process_each_site(config, force=False):
 
             if error_message:
                 error_message = error_message.strip()
-                print('Error for {}: {}'.format(site_name, error_message))
+                color_text('Error for {}: {}'.format(site_name, error_message), Color.ERROR)
 
                 for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                     error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
@@ -192,7 +182,7 @@ def process_each_site(config, force=False):
 
                     telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_message_for_tg)
             else:
-                print(f"Request to {site_name} completed successfully.")
+                color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
 
 
 if __name__ == "__main__":
