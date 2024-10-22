@@ -153,6 +153,7 @@ sites:
   #    - No method specified (default is GET)
   main_page_check:
     url: "https://example.com/"
+    follow_redirects: True # Redirects are not followed by default
     search_string: "<body>"
     # Notifications will be sent to the frontend group
     tg_chats_to_notify:
@@ -162,6 +163,7 @@ sites:
   # 2. Explicit GET request to a non-existent page, expecting 404 and "Not Found"
   not_found_page_check:
     url: "https://example.com/nonexistent-page"
+    follow_redirects: False # Redirects are not followed by default, making this the same as the default behavior.
     method: "GET"
     status_code: 404
     search_string: "Not Found"
@@ -220,6 +222,7 @@ sites:
 - **telegram_bot_token**: Your Telegram bot token obtained from @BotFather.
 - **sites**: A list of sites to monitor.
 - **url**: The URL of the site to monitor.
+- **follow_redirects**: (optional, default is False): Whether to follow HTTP redirects during the request.
 - **method** (optional, default is GET): The HTTP method to use (GET, POST, HEAD).
 - **headers** (optional): A dictionary of HTTP headers to include in the request.
 - **post_data** (optional): Only for the POST method.
