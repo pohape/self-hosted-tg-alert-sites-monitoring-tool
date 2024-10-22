@@ -19,6 +19,7 @@ DEFAULT = {
     'status_code': 200,
     'post_data': None,
     'search_string': '',
+    'headers': {},
 }
 
 
@@ -28,8 +29,12 @@ class RequestMethod(Enum):
     HEAD = 'HEAD'
 
 
-def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_data: str = None):
-    base = f"curl --max-time {timeout} -v '{url}'"
+def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
+    if headers:
+        header_options = ' '.join([f"-H '{key}: {value}'" for key, value in headers.items()])
+        base = f"curl --max-time {timeout} -v {header_options} '{url}'"
+    else:
+        base = f"curl --max-time {timeout} -v '{url}'"
 
     if method == RequestMethod.HEAD:
         return f"{base} --head"
@@ -41,35 +46,46 @@ def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_da
     return base
 
 
-def error(err: str, url: str, method: RequestMethod, timeout: int, post_data: str = None):
+def error(err: str, url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
     return 'An error occurred: {}\nTo replicate the request, you can use the following cURL command:\n{}'.format(
         err,
-        generate_curl_command(url, method, timeout, post_data)
+        generate_curl_command(url, method, timeout, post_data, headers)
     )
 
 
-def perform_request(url: str, method: RequestMethod, status_code: int, search: str, timeout: int, post_data: str):
+def perform_request(url: str,
+                    method: RequestMethod,
+                    status_code: int,
+                    search: str,
+                    timeout: int,
+                    post_data: str,
+                    headers: dict):
     try:
         if method == RequestMethod.GET:
-            response = requests.get(url, timeout=timeout)
+            response = requests.get(url, timeout=timeout, headers=headers)
         elif method == RequestMethod.POST:
-            response = requests.post(url, data=post_data, timeout=timeout)
+            response = requests.post(url, data=post_data, timeout=timeout, headers=headers)
         elif method == RequestMethod.HEAD:
-            response = requests.head(url, timeout=timeout)
+            response = requests.head(url, timeout=timeout, headers=headers)
         else:
-            return error('Invalid request method.', url, method, timeout, post_data)
+            return error('Invalid request method.', url, method, timeout, post_data, headers)
 
         if response.status_code != status_code:
-            return error(f"Expected status code '{status_code}'", url, method, timeout, post_data)
+            return error(f"Expected status code '{status_code}', but got '{response.status_code}'",
+                         url,
+                         method,
+                         timeout,
+                         post_data,
+                         headers)
 
         # Only search for the string if it's a GET or POST request
         if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in response.text:
-            return error(f"Search string '{search}' not found in the response.", url, method, timeout, post_data)
+            return error(f"The string '{search}' not found in the response.", url, method, timeout, post_data, headers)
 
         return None
 
     except requests.exceptions.RequestException as e:
-        return error(f"An error occurred: {e}", url, method, timeout, post_data)
+        return error(f"An error occurred: {e}", url, method, timeout, post_data, headers)
 
 
 def should_run(schedule: str) -> bool:
