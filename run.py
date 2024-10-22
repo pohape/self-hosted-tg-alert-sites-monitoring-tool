@@ -4,6 +4,7 @@ import socket
 import ssl
 from datetime import datetime
 from enum import Enum
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -115,6 +116,30 @@ def perform_request(site_name: str,
                     timeout: int,
                     post_data: str,
                     headers: dict):
+    if url.startswith('https://'):
+        parsed_url = urlparse(url)
+        hostname = parsed_url.hostname
+        cert = get_certificate_expiry(hostname, parsed_url.port if parsed_url.port else 443)
+
+        if cert['error']:
+            return error(f"SSL certificate error: {cert['error']}",
+                         site_name=site_name,
+                         url=url,
+                         follow_redirects=follow_redirects,
+                         method=method,
+                         timeout=timeout,
+                         post_data=post_data,
+                         headers=headers)
+        elif not cert['is_valid']:
+            return error(f"SSL certificate has expired or is not yet valid: {cert['not_before']} - {cert['not_after']}",
+                         site_name=site_name,
+                         url=url,
+                         follow_redirects=follow_redirects,
+                         method=method,
+                         timeout=timeout,
+                         post_data=post_data,
+                         headers=headers)
+
     try:
         if method == RequestMethod.GET:
             res = requests.get(url, timeout=timeout, headers=headers, allow_redirects=follow_redirects)
