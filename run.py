@@ -1,5 +1,6 @@
 import argparse
 import os
+import socket
 from datetime import datetime
 from enum import Enum
 
@@ -29,6 +30,12 @@ class RequestMethod(Enum):
     HEAD = 'HEAD'
 
 
+def get_server_info():
+    hostname = socket.gethostname()
+
+    return f"Server: {hostname} (IP: {socket.gethostbyname(hostname)})"
+
+
 def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
     header_options = ' '.join([f"-H '{key}: {value}'" for key, value in headers.items()]) if headers else ''
     base = f"curl --max-time {timeout} -v{' ' + header_options if header_options else ''} '{url}'"
@@ -44,8 +51,9 @@ def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_da
 
 
 def error(err: str, url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
-    return 'An error occurred: {}\nTo replicate the request, you can use the following cURL command:\n{}'.format(
+    return '{}\n{}\nTo replicate the request, you can use the following cURL command:\n{}'.format(
         err,
+        get_server_info(),
         generate_curl_command(url, method, timeout, post_data, headers)
     )
 
