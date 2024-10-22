@@ -33,6 +33,18 @@ class RequestMethod(Enum):
     HEAD = 'HEAD'
 
 
+certificate_cache = {}
+
+
+def get_certificate_expiry_with_cache(hostname: str, port: int = 443) -> dict:
+    cache_key = '{}:{}'.format(hostname, port)
+
+    if cache_key not in certificate_cache:
+        certificate_cache[cache_key] = get_certificate_expiry(hostname, port)
+
+    return certificate_cache[cache_key]
+
+
 def get_certificate_expiry(hostname: str, port: int = 443) -> dict:
     try:
         context = ssl.create_default_context()
@@ -119,7 +131,7 @@ def perform_request(site_name: str,
     if url.startswith('https://'):
         parsed_url = urlparse(url)
         hostname = parsed_url.hostname
-        cert = get_certificate_expiry(hostname, parsed_url.port if parsed_url.port else 443)
+        cert = get_certificate_expiry_with_cache(hostname, parsed_url.port if parsed_url.port else 443)
 
         if cert['error']:
             return error(f"SSL certificate error: {cert['error']}",
