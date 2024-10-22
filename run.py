@@ -21,6 +21,7 @@ DEFAULT = {
     'post_data': None,
     'search_string': '',
     'headers': {},
+    'follow_redirects': False,
 }
 
 
@@ -37,9 +38,17 @@ def get_server_info():
     return f"```SERVER\n{hostname_escaped} ({socket.gethostbyname(hostname)})```"
 
 
-def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
+def generate_curl_command(url: str,
+                          follow_redirects: bool,
+                          method: RequestMethod,
+                          timeout: int,
+                          post_data: str = None,
+                          headers: dict = None):
     header_options = ' '.join([f"-H '{key}: {value}'" for key, value in headers.items()]) if headers else ''
     base = f"curl --max-time {timeout} -v{' ' + header_options if header_options else ''} '{url}'"
+
+    if follow_redirects:
+        base += ' -L'
 
     if method == RequestMethod.HEAD:
         return f"{base} --head"
@@ -54,23 +63,23 @@ def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_da
 def error(err: str,
           site_name: str,
           url: str,
+          follow_redirects: bool,
           method: RequestMethod,
           timeout: int,
           post_data: str = None,
           headers: dict = None):
-    print(site_name)
-
     return '_{}_:\n*{}*\n\n{}\n\n{}\n```sh\n{}```'.format(
         telegram_helper.escape_special_chars(site_name),
         telegram_helper.escape_special_chars(err),
         get_server_info(),
         'To replicate the request, you can use the following cURL command:',
-        generate_curl_command(url, method, timeout, post_data, headers)
+        generate_curl_command(url, follow_redirects, method, timeout, post_data, headers)
     ).strip()
 
 
 def perform_request(site_name: str,
                     url: str,
+                    follow_redirects: bool,
                     method: RequestMethod,
                     status_code: int,
                     search: str,
@@ -79,43 +88,53 @@ def perform_request(site_name: str,
                     headers: dict):
     try:
         if method == RequestMethod.GET:
-            response = requests.get(url, timeout=timeout, headers=headers)
+            res = requests.get(url, timeout=timeout, headers=headers, allow_redirects=follow_redirects)
         elif method == RequestMethod.POST:
-            response = requests.post(url, data=post_data, timeout=timeout, headers=headers)
+            res = requests.post(url, timeout=timeout, headers=headers, allow_redirects=follow_redirects, data=post_data)
         elif method == RequestMethod.HEAD:
-            response = requests.head(url, timeout=timeout, headers=headers)
+            res = requests.head(url, timeout=timeout, headers=headers, allow_redirects=follow_redirects)
         else:
-            return error('Invalid request method.', site_name, url, method, timeout, post_data, headers)
+            return error('Invalid request method.',
+                         site_name=site_name,
+                         url=url,
+                         follow_redirects=follow_redirects,
+                         method=method,
+                         timeout=timeout,
+                         post_data=post_data,
+                         headers=headers)
 
-        if response.status_code != status_code:
-            return error(f"Expected status code '{status_code}', but got '{response.status_code}'",
-                         site_name,
-                         url,
-                         method,
-                         timeout,
-                         post_data,
-                         headers)
+        if res.status_code != status_code:
+            return error(f"Expected status code '{status_code}', but got '{res.status_code}'",
+                         site_name=site_name,
+                         url=url,
+                         follow_redirects=follow_redirects,
+                         method=method,
+                         timeout=timeout,
+                         post_data=post_data,
+                         headers=headers)
 
         # Only search for the string if it's a GET or POST request
-        if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in response.text:
+        if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in res.text:
             return error(f"The string '{search}' not found in the response.",
-                         site_name,
-                         url,
-                         method,
-                         timeout,
-                         post_data,
-                         headers)
+                         site_name=site_name,
+                         url=url,
+                         follow_redirects=follow_redirects,
+                         method=method,
+                         timeout=timeout,
+                         post_data=post_data,
+                         headers=headers)
 
         return None
 
     except requests.exceptions.RequestException as e:
         return error(f"An error occurred: {e}",
-                     site_name,
-                     url,
-                     method,
-                     timeout,
-                     post_data,
-                     headers)
+                     site_name=site_name,
+                     url=url,
+                     follow_redirects=follow_redirects,
+                     method=method,
+                     timeout=timeout,
+                     post_data=post_data,
+                     headers=headers)
 
 
 def should_run(schedule: str) -> bool:
@@ -259,6 +278,7 @@ def process_each_site(config, force=False):
             error_message = perform_request(
                 site_name=site_name,
                 url=site['url'],
+                follow_redirects=site.get('follow_redirects', DEFAULT['follow_redirects']),
                 method=RequestMethod[site.get('method', DEFAULT['method']).upper()],
                 status_code=site.get('status_code', DEFAULT['status_code']),
                 search=site.get('search_string', DEFAULT['search_string']),
