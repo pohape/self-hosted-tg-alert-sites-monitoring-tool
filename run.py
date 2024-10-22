@@ -69,7 +69,7 @@ def get_certificate_expiry(hostname: str, port: int = 443) -> dict:
             'not_before': None,
             'not_after': None,
             'is_valid': None,
-            'error': f"Failed to get certificate: {e}"
+            'error': str(e)
         }
 
 
