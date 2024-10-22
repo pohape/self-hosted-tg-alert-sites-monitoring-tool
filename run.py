@@ -28,6 +28,26 @@ class RequestMethod(Enum):
     HEAD = 'HEAD'
 
 
+def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_data: str = None):
+    base = f"curl --max-time {timeout} -v '{url}'"
+
+    if method == RequestMethod.HEAD:
+        return f"{base} --head"
+    elif method == RequestMethod.POST and post_data:
+        return f"{base} -X POST -d '{post_data}'"
+    elif method != RequestMethod.GET:
+        return f"{base} -X {method.value}"
+
+    return base
+
+
+def error(err: str, url: str, method: RequestMethod, timeout: int, post_data: str = None):
+    return 'An error occurred: {}\nTo replicate the request, you can use the following cURL command:\n{}'.format(
+        err,
+        generate_curl_command(url, method, timeout, post_data)
+    )
+
+
 def perform_request(url: str, method: RequestMethod, status_code: int, search: str, timeout: int, post_data: str):
     try:
         if method == RequestMethod.GET:
@@ -37,19 +57,19 @@ def perform_request(url: str, method: RequestMethod, status_code: int, search: s
         elif method == RequestMethod.HEAD:
             response = requests.head(url, timeout=timeout)
         else:
-            return "Invalid request method."
+            return error('Invalid request method.', url, method, timeout, post_data)
 
         if response.status_code != status_code:
-            return f"Expected status code '{status_code}', but got '{response.status_code}'"
+            return error(f"Expected status code '{status_code}'", url, method, timeout, post_data)
 
         # Only search for the string if it's a GET or POST request
         if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in response.text:
-            return f"Search string '{search}' not found in the response."
+            return error(f"Search string '{search}' not found in the response.", url, method, timeout, post_data)
 
         return None
 
     except requests.exceptions.RequestException as e:
-        return f"An error occurred: {e}"
+        return error(f"An error occurred: {e}", url, method, timeout, post_data)
 
 
 def should_run(schedule: str) -> bool:
