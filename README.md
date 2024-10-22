@@ -144,25 +144,84 @@ python3 run.py --check-config
 The configuration is done through the **config.yaml** file. Below is an example configuration:
 
 ```yaml
-telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+# Your Telegram Bot Token
+telegram_bot_token: 'YOUR_TELEGRAM_BOT_TOKEN'
+
 sites:
-  api_status:
-    url: "https://api.example.com/status"
-    method: "POST"
-    post_data: '{"some_json_key": "some_json_value"}'
-    status_code: 200
-    search_string: "OK"
-    timeout: 5
-    schedule: '* * * * *'
+  # 1. GET request to the main page where we look for "<body>"
+  #    - No timeout specified (default is 5 seconds)
+  #    - No method specified (default is GET)
+  main_page_check:
+    url: "https://example.com/"
+    search_string: "<body>"
+    # Notifications will be sent to the frontend group
     tg_chats_to_notify:
-      - '123456789'
-      - '-568546249'
+      - '1234567890'  # frontend group ID
+    # Schedule: every minute (default)
+
+  # 2. Explicit GET request to a non-existent page, expecting 404 and "Not Found"
+  not_found_page_check:
+    url: "https://example.com/nonexistent-page"
+    method: "GET"
+    status_code: 404
+    search_string: "Not Found"
+    timeout: 2  # 2 seconds timeout
+    # Notifications will be sent to the backend group
+    tg_chats_to_notify:
+      - '2345678901'  # backend group ID
+    # Schedule: every 5 minutes
+    schedule: '*/5 * * * *'  # Every 5 minutes
+
+  # 3. POST request to the API with authorization and Content-Type JSON, expecting status_code = 201
+  api_post_check:
+    url: "https://example.com/api/endpoint"
+    method: "POST"
+    headers:
+      Content-Type: 'application/json'
+      Authorization: 'Bearer YOUR_API_TOKEN'
+    post_data: '{"key": "value"}'
+    status_code: 201
+    timeout: 3  # 3 seconds timeout
+    # Notifications will be sent to the API group and to the backend group
+    tg_chats_to_notify:
+      - '3456789012'  # API group ID
+      - '2345678901'  # Backend group ID
+    # Schedule: every 15 minutes
+    schedule: '*/15 * * * *'  # Every 15 minutes
+
+  # 4. Sending a contact form through POST request, as browsers typically do by default
+  feedback_form_submission:
+    url: "https://example.com/contact"
+    method: "POST"
+    headers:
+      Content-Type: 'application/x-www-form-urlencoded'
+    post_data: "name=John+Doe&email=john.doe%40example.com&message=Hello+World"
+    status_code: 200
+    search_string: "Thank you for your message"
+    timeout: 2  # 2 seconds timeout
+    # Notifications will be sent to the frontend group
+    tg_chats_to_notify:
+      - '1234567890'  # frontend group ID
+    # Schedule: every day at midnight
+    schedule: '0 0 * * *'  # Every day at 00:00
+
+  # 5. HEAD request to privacy_policy.pdf to check resource availability
+  privacy_policy_check:
+    url: "https://example.com/privacy_policy.pdf"
+    method: "HEAD"
+    # Notifications will be sent to the backend group
+    tg_chats_to_notify:
+      - '2345678901'  # backend group ID
+    # Schedule: every hour
+    schedule: '0 * * * *'  # Every hour at 00 minutes
+    # No timeout specified (default is 5 seconds)
 ```
 
 - **telegram_bot_token**: Your Telegram bot token obtained from @BotFather.
 - **sites**: A list of sites to monitor.
 - **url**: The URL of the site to monitor.
 - **method** (optional, default is GET): The HTTP method to use (GET, POST, HEAD).
+- **headers** (optional): A dictionary of HTTP headers to include in the request.
 - **post_data** (optional): Only for the POST method.
 - **status_code** (optional, default is 200): An expected HTTP status code.
 - **search_string** (optional): The string to search for in the response (for GET and POST requests).
