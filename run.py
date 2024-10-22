@@ -32,8 +32,9 @@ class RequestMethod(Enum):
 
 def get_server_info():
     hostname = socket.gethostname()
+    hostname_escaped = telegram_helper.escape_special_chars(hostname)
 
-    return f"Server: {hostname} (IP: {socket.gethostbyname(hostname)})"
+    return f"```SERVER\n{hostname_escaped} ({socket.gethostbyname(hostname)})```"
 
 
 def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
@@ -50,15 +51,26 @@ def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_da
     return base
 
 
-def error(err: str, url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
-    return '{}\n{}\nTo replicate the request, you can use the following cURL command:\n{}'.format(
-        err,
+def error(err: str,
+          site_name: str,
+          url: str,
+          method: RequestMethod,
+          timeout: int,
+          post_data: str = None,
+          headers: dict = None):
+    print(site_name)
+
+    return '_{}_:\n*{}*\n\n{}\n\n{}\n```sh\n{}```'.format(
+        telegram_helper.escape_special_chars(site_name),
+        telegram_helper.escape_special_chars(err),
         get_server_info(),
+        'To replicate the request, you can use the following cURL command:',
         generate_curl_command(url, method, timeout, post_data, headers)
-    )
+    ).strip()
 
 
-def perform_request(url: str,
+def perform_request(site_name: str,
+                    url: str,
                     method: RequestMethod,
                     status_code: int,
                     search: str,
@@ -73,10 +85,11 @@ def perform_request(url: str,
         elif method == RequestMethod.HEAD:
             response = requests.head(url, timeout=timeout, headers=headers)
         else:
-            return error('Invalid request method.', url, method, timeout, post_data, headers)
+            return error('Invalid request method.', site_name, url, method, timeout, post_data, headers)
 
         if response.status_code != status_code:
             return error(f"Expected status code '{status_code}', but got '{response.status_code}'",
+                         site_name,
                          url,
                          method,
                          timeout,
@@ -85,12 +98,24 @@ def perform_request(url: str,
 
         # Only search for the string if it's a GET or POST request
         if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in response.text:
-            return error(f"The string '{search}' not found in the response.", url, method, timeout, post_data, headers)
+            return error(f"The string '{search}' not found in the response.",
+                         site_name,
+                         url,
+                         method,
+                         timeout,
+                         post_data,
+                         headers)
 
         return None
 
     except requests.exceptions.RequestException as e:
-        return error(f"An error occurred: {e}", url, method, timeout, post_data, headers)
+        return error(f"An error occurred: {e}",
+                     site_name,
+                     url,
+                     method,
+                     timeout,
+                     post_data,
+                     headers)
 
 
 def should_run(schedule: str) -> bool:
@@ -232,6 +257,7 @@ def process_each_site(config, force=False):
     for site_name, site in config['sites'].items():
         if force or should_run(site.get('schedule', DEFAULT['schedule'])):
             error_message = perform_request(
+                site_name=site_name,
                 url=site['url'],
                 method=RequestMethod[site.get('method', DEFAULT['method']).upper()],
                 status_code=site.get('status_code', DEFAULT['status_code']),
@@ -242,16 +268,10 @@ def process_each_site(config, force=False):
             )
 
             if error_message:
-                error_message = error_message.strip()
-                color_text('Error for {}: {}'.format(site_name, error_message), Color.ERROR)
+                color_text(error_message, Color.ERROR)
 
                 for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
-                    error_message_for_tg = 'Error for *{}*: ```\n{}\n```'.format(
-                        telegram_helper.escape_special_chars(site_name),
-                        error_message
-                    )
-
-                    telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_message_for_tg)
+                    telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_message)
             else:
                 color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
 
