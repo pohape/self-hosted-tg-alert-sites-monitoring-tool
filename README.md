@@ -3,16 +3,17 @@ This is a self-hosted site monitoring tool that checks the availability of websi
 
 ### Features
 
-- Supports GET, POST, and HEAD requests for monitoring website availability
-- Searches for specified text on the monitored page to ensure content validity
-- Sends notifications to Telegram on errors
-- Flexible scheduling with cron-like syntax
-- Customizable through a YAML configuration file
-- Offers debug modes to effortlessly identify required Telegram chat IDs, debug Telegram API token configuration and test everything without hassle
+- **Multiple HTTP Methods**: Supports GET, POST, and HEAD requests for monitoring website availability.
+- **Custom Headers**: Allows the inclusion of custom HTTP headers in requests.
+- **Content Validation**: Searches for specified text on the monitored page to ensure content validity.
+- **Telegram Notifications**: Sends notifications to Telegram on errors.
+- **Flexible Scheduling**: Schedule monitoring tasks using cron-like syntax.
+- **Easy Configuration**: Customizable through a YAML configuration file.
+- **Debug Modes**: Offers debug modes to effortlessly identify required Telegram chat IDs, debug Telegram API token configuration, and test everything without hassle.
 
 ### Quick start
 
-##### 1. Clone the repository and install the required Python packages:
+##### 1. Clone the Repository and Install Dependencies
 
 ```shell
 git clone https://github.com/pohape/self-hosted-tg-alert-sites-monitoring-tool
