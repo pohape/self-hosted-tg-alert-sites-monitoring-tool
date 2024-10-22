@@ -1,6 +1,7 @@
 import argparse
 import os
 import socket
+import ssl
 from datetime import datetime
 from enum import Enum
 
@@ -29,6 +30,34 @@ class RequestMethod(Enum):
     GET = 'GET'
     POST = 'POST'
     HEAD = 'HEAD'
+
+
+def get_certificate_expiry(hostname: str, port: int = 443) -> dict:
+    try:
+        context = ssl.create_default_context()
+
+        with socket.create_connection((hostname, port)) as sock:
+            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                cert = ssock.getpeercert()
+
+        not_before = datetime.strptime(cert['notBefore'], "%b %d %H:%M:%S %Y GMT")
+        not_after = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y GMT")
+
+        return {
+            'issuer': cert['issuer'],
+            'not_before': not_before,
+            'not_after': not_after,
+            'is_valid': not_before <= datetime.utcnow() <= not_after,
+            'error': None
+        }
+    except Exception as e:
+        return {
+            'issuer': None,
+            'not_before': None,
+            'not_after': None,
+            'is_valid': None,
+            'error': f"Failed to get certificate: {e}"
+        }
 
 
 def get_server_info():
