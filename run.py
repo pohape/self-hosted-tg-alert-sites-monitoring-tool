@@ -31,7 +31,7 @@ class RequestMethod(Enum):
 
 def generate_curl_command(url: str, method: RequestMethod, timeout: int, post_data: str = None, headers: dict = None):
     header_options = ' '.join([f"-H '{key}: {value}'" for key, value in headers.items()]) if headers else ''
-    base = f"curl --max-time {timeout} -v {header_options} '{url}'"
+    base = f"curl --max-time {timeout} -v{' ' + header_options if header_options else ''} '{url}'"
 
     if method == RequestMethod.HEAD:
         return f"{base} --head"
