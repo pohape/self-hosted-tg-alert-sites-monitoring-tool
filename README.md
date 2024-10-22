@@ -4,6 +4,7 @@ This is a self-hosted site monitoring tool that checks the availability of websi
 ### Features
 
 - **Multiple HTTP Methods**: Supports GET, POST, and HEAD requests for monitoring website availability.
+- **SSL Certificate Monitoring**: Automatically verifies the validity of HTTPS certificates, ensuring they are properly configured and up to date.
 - **Custom Headers**: Allows the inclusion of custom HTTP headers in requests.
 - **Content Validation**: Searches for specified text on the monitored page to ensure content validity.
 - **Telegram Notifications**: Sends notifications to Telegram on errors.
