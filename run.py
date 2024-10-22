@@ -143,6 +143,15 @@ def check_config(config):
                     report[site_name][Color.WARNING][field_name] += 'are you sure this is what you want?'
                 elif not method_is_post and post_data_specified:
                     report[site_name][Color.WARNING][field_name] = 'ignored because the method is not POST'
+            elif field_name == 'headers':
+                if field_name in site:
+                    if isinstance(site[field_name], dict):
+                        headers_str = ', '.join([f'{k}: {v}' for k, v in site[field_name].items()])
+                        report[site_name][Color.SUCCESS][field_name] = headers_str
+                    else:
+                        report[site_name][Color.ERROR][field_name] = 'must be a dictionary of header key-value pairs'
+                else:
+                    report[site_name][Color.WARNING][field_name] = 'not found, default value is empty headers'
             elif field_name in site:
                 if field_name == 'schedule' and not is_valid_cron(site['schedule']):
                     report[site_name][Color.ERROR][field_name] = f"invalid cron syntax: '{site['schedule']}'"
@@ -223,7 +232,8 @@ def process_each_site(config, force=False):
                 status_code=site.get('status_code', DEFAULT['status_code']),
                 search=site.get('search_string', DEFAULT['search_string']),
                 timeout=site.get('timeout', DEFAULT['timeout']),
-                post_data=site.get('post_data', DEFAULT['post_data'])
+                post_data=site.get('post_data', DEFAULT['post_data']),
+                headers=site.get('headers', DEFAULT['headers'])
             )
 
             if error_message:
