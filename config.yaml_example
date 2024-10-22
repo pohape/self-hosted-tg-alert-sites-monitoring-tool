@@ -1,44 +1,71 @@
-telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+# Your Telegram Bot Token
+telegram_bot_token: 'YOUR_TELEGRAM_BOT_TOKEN'
+
 sites:
-  main_page:
+  # 1. GET request to the main page where we look for "<body>"
+  #    - No timeout specified (default is 5 seconds)
+  #    - No method specified (default is GET)
+  main_page_check:
     url: "https://example.com/"
+    search_string: "<body>"
+    # Notifications will be sent to the frontend group
+    tg_chats_to_notify:
+      - '1234567890'  # frontend group ID
+    # Schedule: every minute (default)
+
+  # 2. Explicit GET request to a non-existent page, expecting 404 and "Not Found"
+  not_found_page_check:
+    url: "https://example.com/nonexistent-page"
     method: "GET"
-    status_code: 200
-    search_string: "Example Domain"
-    timeout: 5
-    schedule: '* * * * *'
-    tg_chats_to_notify:
-      - '123456789'
-      - '-568546249'
-  api_status:
-    url: "https://api.example.com/status"
-    method: "POST"
-    post_data: '{"some_json_key": "some_json_value"}'
-    status_code: 200
-    search_string: "OK"
-    timeout: 1
-    schedule: '5,20,35,50 * * * *'
-    tg_chats_to_notify:
-      - '546623545'
-  logo:
-    url: "https://example.com/logo.png"
-    method: "HEAD"
-    timeout: 1
-    schedule: '10 10 * * *'
-    tg_chats_to_notify:
-      - '-568546249'
-  privacy_policy:
-    url: "https://example.com/privacy_policy.pdf"
-    method: "HEAD"
-    timeout: 1
-    schedule: '11 10 * * *'
-    tg_chats_to_notify:
-      - '-568546249'
-not_found:
-    url: "https://example.com/qwerty"
-    method: "HEAD"
     status_code: 404
     search_string: "Not Found"
-    timeout: 1
+    timeout: 2  # 2 seconds timeout
+    # Notifications will be sent to the backend group
     tg_chats_to_notify:
-      - '-568546249'
+      - '2345678901'  # backend group ID
+    # Schedule: every 5 minutes
+    schedule: '*/5 * * * *'  # Every 5 minutes
+
+  # 3. POST request to the API with authorization and Content-Type JSON, expecting status_code = 201
+  api_post_check:
+    url: "https://example.com/api/endpoint"
+    method: "POST"
+    headers:
+      Content-Type: 'application/json'
+      Authorization: 'Bearer YOUR_API_TOKEN'
+    post_data: '{"key": "value"}'
+    status_code: 201
+    timeout: 3  # 3 seconds timeout
+    # Notifications will be sent to the API group and to the backend group
+    tg_chats_to_notify:
+      - '3456789012'  # API group ID
+      - '2345678901'  # Backend group ID
+    # Schedule: every 15 minutes
+    schedule: '*/15 * * * *'  # Every 15 minutes
+
+  # 4. Sending a contact form through POST request, as browsers typically do by default
+  feedback_form_submission:
+    url: "https://example.com/contact"
+    method: "POST"
+    headers:
+      Content-Type: 'application/x-www-form-urlencoded'
+    post_data: "name=John+Doe&email=john.doe%40example.com&message=Hello+World"
+    status_code: 200
+    search_string: "Thank you for your message"
+    timeout: 2  # 2 seconds timeout
+    # Notifications will be sent to the frontend group
+    tg_chats_to_notify:
+      - '1234567890'  # frontend group ID
+    # Schedule: every day at midnight
+    schedule: '0 0 * * *'  # Every day at 00:00
+
+  # 5. HEAD request to privacy_policy.pdf to check resource availability
+  privacy_policy_check:
+    url: "https://example.com/privacy_policy.pdf"
+    method: "HEAD"
+    # Notifications will be sent to the backend group
+    tg_chats_to_notify:
+      - '2345678901'  # backend group ID
+    # Schedule: every hour
+    schedule: '0 * * * *'  # Every hour at 00 minutes
+    # No timeout specified (default is 5 seconds)
