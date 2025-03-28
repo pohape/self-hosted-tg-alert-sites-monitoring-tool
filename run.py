@@ -53,8 +53,8 @@ def get_certificate_expiry(hostname: str, port: int = 443) -> dict:
             with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                 cert = ssock.getpeercert()
 
-        not_before = datetime.strptime(cert['notBefore'], "%b %d %H:%M:%S %Y GMT")
-        not_after = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y GMT")
+        not_before = datetime.strptime(cert['notBefore'], "%b %d %H:%M:%S %Y GMT").replace(tzinfo=timezone.utc)
+        not_after = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y GMT").replace(tzinfo=timezone.utc)
 
         return {
             'issuer': cert['issuer'],
