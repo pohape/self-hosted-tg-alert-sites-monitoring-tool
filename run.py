@@ -2,7 +2,7 @@ import argparse
 import os
 import socket
 import ssl
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from urllib.parse import urlparse
 
@@ -60,7 +60,7 @@ def get_certificate_expiry(hostname: str, port: int = 443) -> dict:
             'issuer': cert['issuer'],
             'not_before': not_before,
             'not_after': not_after,
-            'is_valid': not_before <= datetime.utcnow() <= not_after,
+            'is_valid': not_before <= datetime.now(tz=timezone.utc) <= not_after,
             'error': None
         }
     except Exception as e:
@@ -345,7 +345,7 @@ def process_each_site(config, force=False):
                 site_name=site_name,
                 url=site['url'],
                 follow_redirects=site.get('follow_redirects', DEFAULT['follow_redirects']),
-                method=RequestMethod[site.get('method', DEFAULT['method']).upper()],
+                method=RequestMethod(site.get('method', DEFAULT['method']).upper()),
                 status_code=site.get('status_code', DEFAULT['status_code']),
                 search=site.get('search_string', DEFAULT['search_string']),
                 timeout=site.get('timeout', DEFAULT['timeout']),
