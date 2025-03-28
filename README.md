@@ -218,6 +218,20 @@ sites:
     # Schedule: every hour
     schedule: '0 * * * *'  # Every hour at 00 minutes
     # No timeout specified (default is 5 seconds)
+
+  # 6. Monitor ChatGPT API balance availability (one check costs ~$0.000001275)
+  chat_gpt_balance_check:
+    url: "https://api.openai.com/v1/chat/completions"
+    method: "POST"
+    headers:
+      Content-Type: 'application/json'
+      Authorization: 'Bearer YOUR_OPENAI_API_KEY'
+    post_data: '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Ping"}], "max_tokens": 1}'
+    status_code: 200
+    search_string: 'prompt_tokens'
+    schedule: '0 * * * *'  # Every hour at 00 minutes
+    tg_chats_to_notify:
+      - '2345678999'  # infrastructure manager ID
 ```
 
 - **telegram_bot_token**: Your Telegram bot token obtained from @BotFather.
