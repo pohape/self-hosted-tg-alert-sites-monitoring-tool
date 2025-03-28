@@ -341,11 +341,20 @@ def main():
 def process_each_site(config, force=False):
     for site_name, site in config['sites'].items():
         if force or should_run(site.get('schedule', DEFAULT['schedule'])):
+            method_raw = site.get('method', None)
+
+            if method_raw:
+                method = RequestMethod(method_raw.upper())
+            elif site.get('post_data'):
+                method = RequestMethod.POST
+            else:
+                method = RequestMethod.GET
+
             error_message = perform_request(
                 site_name=site_name,
                 url=site['url'],
                 follow_redirects=site.get('follow_redirects', DEFAULT['follow_redirects']),
-                method=RequestMethod(site.get('method', DEFAULT['method']).upper()),
+                method=method,
                 status_code=site.get('status_code', DEFAULT['status_code']),
                 search=site.get('search_string', DEFAULT['search_string']),
                 timeout=site.get('timeout', DEFAULT['timeout']),
