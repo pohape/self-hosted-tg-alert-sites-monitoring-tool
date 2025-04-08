@@ -358,6 +358,9 @@ def main():
         save_cache(cache)
 
         for site_name, cache_info in cache.items():
+            if site_name not in config['sites']:
+                continue  # skip old or unknown entries
+
             notify_after_attempt = config['sites'][site_name].get('notify_after_attempt',
                                                                   DEFAULT['notify_after_attempt'])
 
@@ -406,7 +409,7 @@ def process_each_site(config, cache: dict, force=False):
                 cache[site_name]['last_failed_attempt'] = int(time.time())
                 cache[site_name]['last_error'] = error_message
             else:
-                cache[site_name] = {'failed_attempts': 0}
+                cache[site_name]['failed_attempts'] = 0
                 color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
 
 
