@@ -356,21 +356,24 @@ def main():
         cache = load_cache()
         process_each_site(config, cache, force=args.force)
         save_cache(cache)
+        process_cache(cache, config)
 
-        for site_name, cache_info in cache.items():
-            if site_name not in config['sites']:
-                continue  # skip old or unknown entries
 
-            notify_after_attempt = config['sites'][site_name].get('notify_after_attempt',
-                                                                  DEFAULT['notify_after_attempt'])
+def process_cache(cache, config):
+    for site_name, cache_info in cache.items():
+        if site_name not in config['sites']:
+            continue  # skip old or unknown entries
 
-            if cache_info['failed_attempts'] >= notify_after_attempt:
-                error_attempts = escape_special_chars(f"Failed {cache[site_name]['failed_attempts']} times in a row.\n")
+        notify_after_attempt = config['sites'][site_name].get('notify_after_attempt',
+                                                              DEFAULT['notify_after_attempt'])
 
-                for chat_id in get_uniq_chat_ids(config['sites'][site_name]['tg_chats_to_notify']):
-                    telegram_helper.send_message(config['telegram_bot_token'],
-                                                 chat_id,
-                                                 cache_info['last_error'] + error_attempts)
+        if cache_info['failed_attempts'] >= notify_after_attempt:
+            error_attempts = escape_special_chars(f"Failed {cache[site_name]['failed_attempts']} times in a row.\n")
+
+            for chat_id in get_uniq_chat_ids(config['sites'][site_name]['tg_chats_to_notify']):
+                telegram_helper.send_message(config['telegram_bot_token'],
+                                             chat_id,
+                                             cache_info['last_error'] + error_attempts)
 
 
 def perform(site, site_name: str):
