@@ -361,22 +361,27 @@ def main():
 
 def process_cache(cache, config):
     for site_name, cache_info in cache.items():
-        if site_name not in config['sites']:
-            continue  # skip old or unknown entries
+        failed_attempts = cache_info['failed_attempts']
 
-        notify_after_attempt = config['sites'][site_name].get('notify_after_attempt',
-                                                              DEFAULT['notify_after_attempt'])
+        if site_name not in config['sites'] or failed_attempts == 0:
+            continue  # skip old, unknown entries or successful attempts
 
-        if cache_info['failed_attempts'] >= notify_after_attempt:
+        site = config['sites'][site_name]
+        notify_after_attempt = site.get('notify_after_attempt', DEFAULT['notify_after_attempt'])
+
+        if failed_attempts < notify_after_attempt and time.time() - cache_info['last_checked_at'] >= 59:
+            process_site(site, site_name, cache)
+
+        if failed_attempts >= notify_after_attempt:
             error_attempts = escape_special_chars(f"Failed {cache[site_name]['failed_attempts']} times in a row.\n")
 
-            for chat_id in get_uniq_chat_ids(config['sites'][site_name]['tg_chats_to_notify']):
+            for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                 telegram_helper.send_message(config['telegram_bot_token'],
                                              chat_id,
                                              cache_info['last_error'] + error_attempts)
 
 
-def perform(site, site_name: str):
+def process_site(site, site_name: str, cache: dict):
     method_raw = site.get('method', None)
 
     if method_raw:
@@ -386,7 +391,7 @@ def perform(site, site_name: str):
     else:
         method = RequestMethod.GET
 
-    return perform_request(
+    error_message = perform_request(
         site_name=site_name,
         url=site['url'],
         follow_redirects=site.get('follow_redirects', DEFAULT['follow_redirects']),
@@ -398,22 +403,28 @@ def perform(site, site_name: str):
         headers=site.get('headers', DEFAULT['headers'])
     )
 
+    if site_name not in cache:
+        cache[site_name] = {
+            'failed_attempts': 0,
+            'last_checked_at': int(time.time()),
+            'last_error': '',
+        }
+    else:
+        cache[site_name]['last_checked_at'] = int(time.time())
+
+    if error_message:
+        cache[site_name]['failed_attempts'] = cache[site_name]['failed_attempts'] + 1
+        cache[site_name]['last_error'] = error_message
+        color_text(error_message, Color.ERROR)
+    else:
+        cache[site_name]['failed_attempts'] = 0
+        color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
+
 
 def process_each_site(config, cache: dict, force=False):
     for site_name, site in config['sites'].items():
         if force or should_run(site.get('schedule', DEFAULT['schedule'])):
-            error_message = perform(site, site_name)
-
-            if site_name not in cache:
-                cache[site_name] = {'failed_attempts': 0}
-
-            if error_message:
-                cache[site_name]['failed_attempts'] = cache[site_name]['failed_attempts'] + 1
-                cache[site_name]['last_failed_attempt'] = int(time.time())
-                cache[site_name]['last_error'] = error_message
-            else:
-                cache[site_name]['failed_attempts'] = 0
-                color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
+            process_site(site, site_name, cache)
 
 
 if __name__ == "__main__":
