@@ -14,6 +14,7 @@ from croniter import croniter, CroniterBadCronError, CroniterBadDateError
 import telegram_helper
 from cache_helper import save_cache, load_cache, CACHE_FILE_NAME
 from console_helper import Color, color_text
+from telegram_helper import escape_special_chars
 
 CONFIG_FILE_NAME = 'config.yaml'
 REQUIRED_FIELDS = ['url', 'tg_chats_to_notify']
@@ -26,6 +27,7 @@ DEFAULT = {
     'search_string': '',
     'headers': {},
     'follow_redirects': False,
+    'notify_after_attempt': 1,
 }
 
 
@@ -355,30 +357,46 @@ def main():
         process_each_site(config, cache, force=args.force)
         save_cache(cache)
 
+        for site_name, cache_info in cache.items():
+            notify_after_attempt = config['sites'][site_name].get('notify_after_attempt',
+                                                                  DEFAULT['notify_after_attempt'])
+
+            if cache_info['failed_attempts'] >= notify_after_attempt:
+                error_attempts = escape_special_chars(f"Failed {cache[site_name]['failed_attempts']} times in a row.\n")
+
+                for chat_id in get_uniq_chat_ids(config['sites'][site_name]['tg_chats_to_notify']):
+                    telegram_helper.send_message(config['telegram_bot_token'],
+                                                 chat_id,
+                                                 cache_info['last_error'] + error_attempts)
+
+
+def perform(site, site_name: str):
+    method_raw = site.get('method', None)
+
+    if method_raw:
+        method = RequestMethod(method_raw.upper())
+    elif site.get('post_data'):
+        method = RequestMethod.POST
+    else:
+        method = RequestMethod.GET
+
+    return perform_request(
+        site_name=site_name,
+        url=site['url'],
+        follow_redirects=site.get('follow_redirects', DEFAULT['follow_redirects']),
+        method=method,
+        status_code=site.get('status_code', DEFAULT['status_code']),
+        search=site.get('search_string', DEFAULT['search_string']),
+        timeout=site.get('timeout', DEFAULT['timeout']),
+        post_data=site.get('post_data', DEFAULT['post_data']),
+        headers=site.get('headers', DEFAULT['headers'])
+    )
+
 
 def process_each_site(config, cache: dict, force=False):
     for site_name, site in config['sites'].items():
         if force or should_run(site.get('schedule', DEFAULT['schedule'])):
-            method_raw = site.get('method', None)
-
-            if method_raw:
-                method = RequestMethod(method_raw.upper())
-            elif site.get('post_data'):
-                method = RequestMethod.POST
-            else:
-                method = RequestMethod.GET
-
-            error_message = perform_request(
-                site_name=site_name,
-                url=site['url'],
-                follow_redirects=site.get('follow_redirects', DEFAULT['follow_redirects']),
-                method=method,
-                status_code=site.get('status_code', DEFAULT['status_code']),
-                search=site.get('search_string', DEFAULT['search_string']),
-                timeout=site.get('timeout', DEFAULT['timeout']),
-                post_data=site.get('post_data', DEFAULT['post_data']),
-                headers=site.get('headers', DEFAULT['headers'])
-            )
+            error_message = perform(site, site_name)
 
             if site_name not in cache:
                 cache[site_name] = {'failed_attempts': 0}
@@ -386,6 +404,7 @@ def process_each_site(config, cache: dict, force=False):
             if error_message:
                 cache[site_name]['failed_attempts'] = cache[site_name]['failed_attempts'] + 1
                 cache[site_name]['last_failed_attempt'] = int(time.time())
+                cache[site_name]['last_error'] = error_message
             else:
                 cache[site_name] = {'failed_attempts': 0}
                 color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
