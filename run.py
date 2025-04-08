@@ -2,6 +2,7 @@ import argparse
 import os
 import socket
 import ssl
+import time
 from datetime import datetime, timezone
 from enum import Enum
 from urllib.parse import urlparse
@@ -350,10 +351,12 @@ def main():
         check_config(config)
         check_writing_to_cache()
     else:
-        process_each_site(config, force=args.force)
+        cache = load_cache()
+        process_each_site(config, cache, force=args.force)
+        save_cache(cache)
 
 
-def process_each_site(config, force=False):
+def process_each_site(config, cache: dict, force=False):
     for site_name, site in config['sites'].items():
         if force or should_run(site.get('schedule', DEFAULT['schedule'])):
             method_raw = site.get('method', None)
@@ -377,12 +380,14 @@ def process_each_site(config, force=False):
                 headers=site.get('headers', DEFAULT['headers'])
             )
 
-            if error_message:
-                color_text(error_message, Color.ERROR)
+            if site_name not in cache:
+                cache[site_name] = {'failed_attempts': 0}
 
-                for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
-                    telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_message)
+            if error_message:
+                cache[site_name]['failed_attempts'] = cache[site_name]['failed_attempts'] + 1
+                cache[site_name]['last_failed_attempt'] = int(time.time())
             else:
+                cache[site_name] = {'failed_attempts': 0}
                 color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
 
 
