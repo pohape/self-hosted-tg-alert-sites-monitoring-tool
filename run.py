@@ -370,16 +370,32 @@ def process_cache(cache, config):
         site = config['sites'][site_name]
         notify_after_attempt = site.get('notify_after_attempt', DEFAULT['notify_after_attempt'])
 
-        if failed_attempts < notify_after_attempt and time.time() - cache_info['last_checked_at'] >= 59:
+        if failed_attempts > 0 and time.time() - cache_info['last_checked_at'] >= 59:
             process_site(site, site_name, cache)
 
-        if failed_attempts >= notify_after_attempt:
-            error_attempts = escape_special_chars(f"Failed {cache[site_name]['failed_attempts']} times in a row.\n")
+        notified_down = cache_info.get('notified_down', False)
+        notified_restore = cache_info.get('notified_restore', False)
+
+        if failed_attempts >= notify_after_attempt and not notified_down:
+            error_attempts = escape_special_chars(f'Failed {failed_attempts} times in a row.')
 
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
-                telegram_helper.send_message(config['telegram_bot_token'],
-                                             chat_id,
-                                             cache_info['last_error'] + error_attempts)
+                telegram_helper.send_message(
+                    config['telegram_bot_token'],
+                    chat_id,
+                    cache_info['last_error'] + error_attempts
+                )
+
+            cache_info['notified_down'] = True
+        elif failed_attempts == 0 and notified_down and not notified_restore:
+            for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
+                telegram_helper.send_message(
+                    config['telegram_bot_token'],
+                    chat_id,
+                    f"*{escape_special_chars(site_name)}* is back online"
+                )
+
+            cache_info['notified_restore'] = True
 
 
 def process_site(site, site_name: str, cache: dict):
