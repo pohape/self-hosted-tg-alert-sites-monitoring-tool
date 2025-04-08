@@ -7,7 +7,7 @@ This is a self-hosted site monitoring tool that checks the availability of websi
 - **SSL Certificate Monitoring**: Automatically verifies the validity of HTTPS certificates, ensuring they are properly configured and up to date.
 - **Custom Headers**: Allows the inclusion of custom HTTP headers in requests.
 - **Content Validation**: Searches for specified text on the monitored page to ensure content validity.
-- **Telegram Notifications**: Sends notifications to Telegram on errors.
+- **Telegram Notifications**: Sends alerts to Telegram after N failed checks (configurable per site), and a notification when the site is back online.
 - **Flexible Scheduling**: Schedule monitoring tasks using cron-like syntax.
 - **Easy Configuration**: Customizable through a YAML configuration file.
 - **Debug Modes**: Offers debug modes to effortlessly identify required Telegram chat IDs, debug Telegram API token configuration, and test everything without hassle.
@@ -128,6 +128,7 @@ python3 run.py --check-config
 !  schedule: not found, default value is '* * * * *'
 +  url: https://example.com/
 +  tg_chats_to_notify: 5487855
++  notify_after_attempt: 3  # Notify only after 3 failed checks in a row
 +  method: GET
 +  search_string: ENGLISH
 
@@ -246,3 +247,17 @@ sites:
 - **timeout** (optional, default is 5): The timeout for the request in seconds.
 - **schedule** (optional, default is '* * * * *'): The cron-like schedule for monitoring the site.
 - **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
+- **notify_after_attempt** (optional, default is 1): Number of consecutive failures required before a Telegram alert is sent. Helps to reduce false alarms from temporary glitches.
+
+### Recovery Notifications
+
+If a site fails consecutively for the configured number of times (notify_after_attempt), a single Telegram alert is sent to the specified chat(s). After that:
+
+- The site continues to be checked every minute regardless of its original schedule.
+- No duplicate alerts are sent while it's still failing.
+- When the site recovers and passes a check again:
+   - A "back online" notification is sent to the same Telegram chat(s).
+   - Monitoring continues as usual.
+
+This ensures you're notified of outages only once and informed when the issue is resolved — without unnecessary spam.
+
