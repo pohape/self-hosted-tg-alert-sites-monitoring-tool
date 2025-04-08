@@ -357,14 +357,15 @@ def main():
         process_each_site(config, cache, force=args.force)
         save_cache(cache)
         process_cache(cache, config)
+        save_cache(cache)
 
 
 def process_cache(cache, config):
     for site_name, cache_info in cache.items():
         failed_attempts = cache_info['failed_attempts']
 
-        if site_name not in config['sites'] or failed_attempts == 0:
-            continue  # skip old, unknown entries or successful attempts
+        if site_name not in config['sites']:
+            continue
 
         site = config['sites'][site_name]
         notify_after_attempt = site.get('notify_after_attempt', DEFAULT['notify_after_attempt'])
@@ -408,11 +409,17 @@ def process_site(site, site_name: str, cache: dict):
             'failed_attempts': 0,
             'last_checked_at': int(time.time()),
             'last_error': '',
+            'notified_down': False,
+            'notified_restore': False,
         }
     else:
         cache[site_name]['last_checked_at'] = int(time.time())
 
     if error_message:
+        if cache[site_name]['failed_attempts'] == 0:
+            cache[site_name]['notified_down'] = False
+            cache[site_name]['notified_restore'] = False
+
         cache[site_name]['failed_attempts'] = cache[site_name]['failed_attempts'] + 1
         cache[site_name]['last_error'] = error_message
         color_text(error_message, Color.ERROR)
