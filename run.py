@@ -11,6 +11,7 @@ import yaml
 from croniter import croniter, CroniterBadCronError, CroniterBadDateError
 
 import telegram_helper
+from cache_helper import save_cache, load_cache, CACHE_FILE_NAME
 from console_helper import Color, color_text
 
 CONFIG_FILE_NAME = 'config.yaml'
@@ -218,6 +219,17 @@ def get_uniq_chat_ids(chat_ids):
     return set(map(str, chat_ids))
 
 
+def check_writing_to_cache():
+    try:
+        save_cache({})
+    except Exception as e:
+        color_text(f"Error saving cache, check permissions: {CACHE_FILE_NAME}\n{e}", Color.ERROR)
+
+        return False
+
+    return True
+
+
 def check_config(config):
     report = {}
 
@@ -330,10 +342,13 @@ def main():
 
     if args.test_notifications:
         telegram_helper.test_notifications(config, get_uniq_chat_ids)
+        check_writing_to_cache()
     elif args.id_bot_mode:
         telegram_helper.id_bot(config)
+        check_writing_to_cache()
     elif args.check_config:
         check_config(config)
+        check_writing_to_cache()
     else:
         process_each_site(config, force=args.force)
 
