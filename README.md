@@ -251,7 +251,7 @@ sites:
 
 ### Recovery Notifications
 
-If a site fails consecutively for the configured number of times (notify_after_attempt), a single Telegram alert is sent to the specified chat(s). After that:
+If a site fails consecutively for the configured number of times (*notify_after_attempt*), a single Telegram alert is sent to the specified chat(s). After that:
 
 - The site continues to be checked every minute regardless of its original schedule.
 - No duplicate alerts are sent while it's still failing.
