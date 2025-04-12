@@ -1,5 +1,4 @@
 import argparse
-import os
 import socket
 import ssl
 import time
@@ -8,12 +7,11 @@ from enum import Enum
 from urllib.parse import urlparse
 
 import requests
-import yaml
 from croniter import croniter, CroniterBadCronError, CroniterBadDateError
 
 import telegram_helper
-from cache_helper import save_cache, load_cache, CACHE_FILE_NAME
 from console_helper import Color, color_text
+from filesystem_helper import save_cache, CACHE_FILE_NAME, load_yaml_or_exit, load_cache
 
 CONFIG_FILE_NAME = 'config.yaml'
 MESSAGES_FILE_NAME = 'messages.yaml'
@@ -342,22 +340,8 @@ def main():
                         help='Check configuration for each site and display missing or default values')
     args = parser.parse_args()
 
-    # Load the configuration file
-    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), CONFIG_FILE_NAME)
-
-    if not os.path.isfile(config_path):
-        exit(config_path + ' not found')
-
-    with open(config_path, 'r') as file:
-        config = yaml.safe_load(file)
-
-    messages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), MESSAGES_FILE_NAME)
-
-    if not os.path.isfile(messages_path):
-        exit(messages_path + ' not found')
-
-    with open(messages_path, 'r') as file:
-        messages = yaml.safe_load(file)
+    config = load_yaml_or_exit(CONFIG_FILE_NAME)
+    messages = load_yaml_or_exit(MESSAGES_FILE_NAME)
 
     if args.test_notifications:
         telegram_helper.test_notifications(config, get_uniq_chat_ids)

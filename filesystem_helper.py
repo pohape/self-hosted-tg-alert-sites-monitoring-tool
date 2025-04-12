@@ -2,7 +2,19 @@ import json
 import os
 from typing import Protocol, runtime_checkable, cast
 
+import yaml
+
 CACHE_FILE_NAME = 'cache.json'
+
+
+def load_yaml_or_exit(file_name: str):
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name)
+
+    if not os.path.isfile(path):
+        exit(f"{path} not found")
+
+    with open(path, 'r') as file:
+        return yaml.safe_load(file)
 
 
 @runtime_checkable
