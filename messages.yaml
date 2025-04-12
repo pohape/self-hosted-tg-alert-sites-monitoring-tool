@@ -1,1 +1,2 @@
+error_message: "_{site_name}_:\n*{error}*\n\n{server_info}\n\nTo replicate the request, you can use the following cURL command:\n```sh\n{curl}```"
 back_online: "*{site_name}* is back online_{server_info}_"
