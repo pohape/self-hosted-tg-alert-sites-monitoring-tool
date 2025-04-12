@@ -1,2 +1,3 @@
-error_message: "_{site_name}_:\n*{error}*\n\n{server_info}\n\nTo replicate the request, you can use the following cURL command:\n```sh\n{curl}```"
+error: "_{site_name}_:\n*{error}*\n\n{server_info}\n\nTo replicate the request, you can use the following cURL command:\n```sh\n{curl}```"
+error_suffix: "Failed *{count}* times in a row\\. You will be notified when it's back online\\."
 back_online: "*{site_name}* is back online_{server_info}_"

@@ -120,7 +120,7 @@ def generate_error_msg(messages: dict[str, str],
                        timeout: int,
                        post_data: str = None,
                        headers: dict = None):
-    return messages['error_message'].format(
+    return messages['error'].format(
         site_name=telegram_helper.escape_special_chars(site_name),
         error=telegram_helper.escape_special_chars(err),
         server_info=get_server_info(),
@@ -385,8 +385,7 @@ def process_cache(cache, config, messages):
         notified_restore = cache_info.get('notified_restore', False)
 
         if failed_attempts >= notify_after_attempt and not notified_down:
-            error_msg = cache_info[
-                            'last_error'] + f'Failed *{failed_attempts}* times in a row\. You will be notified when it\'s back online\.'
+            error_msg = cache_info['last_error'] + messages['error_suffix'].format(count=failed_attempts)
 
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                 telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_msg)
