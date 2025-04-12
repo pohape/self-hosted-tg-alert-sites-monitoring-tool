@@ -396,16 +396,19 @@ def process_cache(cache, config, messages):
                 telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_msg)
 
             cache_info['notified_down'] = int(time.time())
+            cache_info['fail_count_at_down'] = failed_attempts
+            cache_info['notified_restore'] = None
         elif failed_attempts == 0 and notified_down and not notified_restore:
             msg = generate_back_online_msg(messages=messages,
                                            site_name=site_name,
-                                           failed_attempts=cache_info['failed_attempts'],
+                                           failed_attempts=cache_info['fail_count_at_down'],
                                            down_timestamp=cache_info['notified_down'])
 
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                 telegram_helper.send_message(config['telegram_bot_token'], chat_id, msg)
 
             cache_info['notified_restore'] = int(time.time())
+            cache_info['fail_count_at_down'] = 0
 
 
 def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
@@ -438,16 +441,19 @@ def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
             'last_error': '',
             'notified_down': None,
             'notified_restore': None,
+            'fail_count_at_down': 0,
         }
     else:
         cache[site_name]['last_checked_at'] = int(time.time())
 
     if error_message:
         if cache[site_name]['failed_attempts'] == 0:
+            cache[site_name]['fail_count_at_down'] = 0
             cache[site_name]['notified_down'] = None
             cache[site_name]['notified_restore'] = None
 
-        cache[site_name]['failed_attempts'] = cache[site_name]['failed_attempts'] + 1
+        cache[site_name]['fail_count_at_down'] += 1
+        cache[site_name]['failed_attempts'] += 1
         cache[site_name]['last_error'] = error_message
         color_text(error_message, Color.ERROR)
     else:
