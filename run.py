@@ -104,9 +104,14 @@ def generate_curl_command(url: str,
     return base
 
 
-def generate_back_online_msg(messages: dict[str, str], site_name: str):
+def generate_back_online_msg(messages: dict[str, str],
+                             site_name: str,
+                             failed_attempts: int,
+                             down_timestamp: int):
     return messages['back_online'].format(
         site_name=telegram_helper.escape_special_chars(site_name),
+        failed_attempts=failed_attempts,
+        minutes=round((int(time.time()) - down_timestamp) / 60),
         server_info=get_server_info()
     ).strip()
 
@@ -381,8 +386,8 @@ def process_cache(cache, config, messages):
         if failed_attempts > 0 and time.time() - cache_info['last_checked_at'] >= 59:
             process_site(messages, site, site_name, cache)
 
-        notified_down = cache_info.get('notified_down', False)
-        notified_restore = cache_info.get('notified_restore', False)
+        notified_down = cache_info.get('notified_down', None)
+        notified_restore = cache_info.get('notified_restore', None)
 
         if failed_attempts >= notify_after_attempt and not notified_down:
             error_msg = cache_info['last_error'] + messages['error_suffix'].format(count=failed_attempts)
@@ -390,14 +395,17 @@ def process_cache(cache, config, messages):
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                 telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_msg)
 
-            cache_info['notified_down'] = True
+            cache_info['notified_down'] = int(time.time())
         elif failed_attempts == 0 and notified_down and not notified_restore:
-            msg = generate_back_online_msg(messages, site_name)
+            msg = generate_back_online_msg(messages=messages,
+                                           site_name=site_name,
+                                           failed_attempts=cache_info['failed_attempts'],
+                                           down_timestamp=cache_info['notified_down'])
 
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                 telegram_helper.send_message(config['telegram_bot_token'], chat_id, msg)
 
-            cache_info['notified_restore'] = True
+            cache_info['notified_restore'] = int(time.time())
 
 
 def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
@@ -428,16 +436,16 @@ def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
             'failed_attempts': 0,
             'last_checked_at': int(time.time()),
             'last_error': '',
-            'notified_down': False,
-            'notified_restore': False,
+            'notified_down': None,
+            'notified_restore': None,
         }
     else:
         cache[site_name]['last_checked_at'] = int(time.time())
 
     if error_message:
         if cache[site_name]['failed_attempts'] == 0:
-            cache[site_name]['notified_down'] = False
-            cache[site_name]['notified_restore'] = False
+            cache[site_name]['notified_down'] = None
+            cache[site_name]['notified_restore'] = None
 
         cache[site_name]['failed_attempts'] = cache[site_name]['failed_attempts'] + 1
         cache[site_name]['last_error'] = error_message
