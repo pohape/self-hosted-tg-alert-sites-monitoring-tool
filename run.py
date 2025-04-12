@@ -106,10 +106,10 @@ def generate_curl_command(url: str,
     return base
 
 
-def generate_back_online_msg(site_name: str):
-    return '*{}* is back online_{}_'.format(
-        telegram_helper.escape_special_chars(site_name),
-        get_server_info(),
+def generate_back_online_msg(messages: dict[str], site_name: str):
+    return messages['back_online'].format(
+        site_name=telegram_helper.escape_special_chars(site_name),
+        server_info=get_server_info()
     ).strip()
 
 
@@ -351,6 +351,14 @@ def main():
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
 
+    messages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), MESSAGES_FILE_NAME)
+
+    if not os.path.isfile(messages_path):
+        exit(messages_path + ' not found')
+
+    with open(messages_path, 'r') as file:
+        messages = yaml.safe_load(file)
+
     if args.test_notifications:
         telegram_helper.test_notifications(config, get_uniq_chat_ids)
         check_writing_to_cache()
@@ -364,11 +372,11 @@ def main():
         cache = load_cache()
         process_each_site(config, cache, force=args.force)
         save_cache(cache)
-        process_cache(cache, config)
+        process_cache(cache, config, messages)
         save_cache(cache)
 
 
-def process_cache(cache, config):
+def process_cache(cache, config, messages):
     for site_name, cache_info in cache.items():
         failed_attempts = cache_info['failed_attempts']
 
@@ -393,7 +401,7 @@ def process_cache(cache, config):
 
             cache_info['notified_down'] = True
         elif failed_attempts == 0 and notified_down and not notified_restore:
-            msg = generate_back_online_msg(site_name)
+            msg = generate_back_online_msg(messages, site_name)
 
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
                 telegram_helper.send_message(config['telegram_bot_token'], chat_id, msg)
