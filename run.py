@@ -14,9 +14,9 @@ from croniter import croniter, CroniterBadCronError, CroniterBadDateError
 import telegram_helper
 from cache_helper import save_cache, load_cache, CACHE_FILE_NAME
 from console_helper import Color, color_text
-from telegram_helper import escape_special_chars
 
 CONFIG_FILE_NAME = 'config.yaml'
+MESSAGES_FILE_NAME = 'messages.yaml'
 REQUIRED_FIELDS = ['url', 'tg_chats_to_notify']
 DEFAULT = {
     'timeout': 5,
@@ -106,14 +106,21 @@ def generate_curl_command(url: str,
     return base
 
 
-def error(err: str,
-          site_name: str,
-          url: str,
-          follow_redirects: bool,
-          method: RequestMethod,
-          timeout: int,
-          post_data: str = None,
-          headers: dict = None):
+def generate_back_online_msg(site_name: str):
+    return '*{}* is back online_{}_'.format(
+        telegram_helper.escape_special_chars(site_name),
+        get_server_info(),
+    ).strip()
+
+
+def generate_error_msg(err: str,
+                       site_name: str,
+                       url: str,
+                       follow_redirects: bool,
+                       method: RequestMethod,
+                       timeout: int,
+                       post_data: str = None,
+                       headers: dict = None):
     return '_{}_:\n*{}*\n\n{}\n\n{}\n```sh\n{}```'.format(
         telegram_helper.escape_special_chars(site_name),
         telegram_helper.escape_special_chars(err),
@@ -138,23 +145,24 @@ def perform_request(site_name: str,
         cert = get_certificate_expiry_with_cache(hostname, parsed_url.port if parsed_url.port else 443)
 
         if cert['error']:
-            return error(f"SSL certificate error: {cert['error']}",
-                         site_name=site_name,
-                         url=url,
-                         follow_redirects=follow_redirects,
-                         method=method,
-                         timeout=timeout,
-                         post_data=post_data,
-                         headers=headers)
+            return generate_error_msg(f"SSL certificate error: {cert['error']}",
+                                      site_name=site_name,
+                                      url=url,
+                                      follow_redirects=follow_redirects,
+                                      method=method,
+                                      timeout=timeout,
+                                      post_data=post_data,
+                                      headers=headers)
         elif not cert['is_valid']:
-            return error(f"SSL certificate has expired or is not yet valid: {cert['not_before']} - {cert['not_after']}",
-                         site_name=site_name,
-                         url=url,
-                         follow_redirects=follow_redirects,
-                         method=method,
-                         timeout=timeout,
-                         post_data=post_data,
-                         headers=headers)
+            return generate_error_msg(
+                f"SSL certificate has expired or is not yet valid: {cert['not_before']} - {cert['not_after']}",
+                site_name=site_name,
+                url=url,
+                follow_redirects=follow_redirects,
+                method=method,
+                timeout=timeout,
+                post_data=post_data,
+                headers=headers)
 
     try:
         if method == RequestMethod.GET:
@@ -164,47 +172,47 @@ def perform_request(site_name: str,
         elif method == RequestMethod.HEAD:
             res = requests.head(url, timeout=timeout, headers=headers, allow_redirects=follow_redirects)
         else:
-            return error('Invalid request method.',
-                         site_name=site_name,
-                         url=url,
-                         follow_redirects=follow_redirects,
-                         method=method,
-                         timeout=timeout,
-                         post_data=post_data,
-                         headers=headers)
+            return generate_error_msg('Invalid request method.',
+                                      site_name=site_name,
+                                      url=url,
+                                      follow_redirects=follow_redirects,
+                                      method=method,
+                                      timeout=timeout,
+                                      post_data=post_data,
+                                      headers=headers)
 
         if res.status_code != status_code:
-            return error(f"Expected status code '{status_code}', but got '{res.status_code}'",
-                         site_name=site_name,
-                         url=url,
-                         follow_redirects=follow_redirects,
-                         method=method,
-                         timeout=timeout,
-                         post_data=post_data,
-                         headers=headers)
+            return generate_error_msg(f"Expected status code '{status_code}', but got '{res.status_code}'",
+                                      site_name=site_name,
+                                      url=url,
+                                      follow_redirects=follow_redirects,
+                                      method=method,
+                                      timeout=timeout,
+                                      post_data=post_data,
+                                      headers=headers)
 
         # Only search for the string if it's a GET or POST request
         if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in res.text:
-            return error(f"The string '{search}' not found in the response.",
-                         site_name=site_name,
-                         url=url,
-                         follow_redirects=follow_redirects,
-                         method=method,
-                         timeout=timeout,
-                         post_data=post_data,
-                         headers=headers)
+            return generate_error_msg(f"The string '{search}' not found in the response.",
+                                      site_name=site_name,
+                                      url=url,
+                                      follow_redirects=follow_redirects,
+                                      method=method,
+                                      timeout=timeout,
+                                      post_data=post_data,
+                                      headers=headers)
 
         return None
 
     except requests.exceptions.RequestException as e:
-        return error(f"An error occurred: {e}",
-                     site_name=site_name,
-                     url=url,
-                     follow_redirects=follow_redirects,
-                     method=method,
-                     timeout=timeout,
-                     post_data=post_data,
-                     headers=headers)
+        return generate_error_msg(f"An error occurred: {e}",
+                                  site_name=site_name,
+                                  url=url,
+                                  follow_redirects=follow_redirects,
+                                  method=method,
+                                  timeout=timeout,
+                                  post_data=post_data,
+                                  headers=headers)
 
 
 def should_run(schedule: str) -> bool:
@@ -377,23 +385,18 @@ def process_cache(cache, config):
         notified_restore = cache_info.get('notified_restore', False)
 
         if failed_attempts >= notify_after_attempt and not notified_down:
-            error_attempts = escape_special_chars(f'Failed {failed_attempts} times in a row.')
+            error_msg = cache_info[
+                            'last_error'] + f'Failed *{failed_attempts}* times in a row\. You will be notified when it\'s back online\.'
 
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
-                telegram_helper.send_message(
-                    config['telegram_bot_token'],
-                    chat_id,
-                    cache_info['last_error'] + error_attempts
-                )
+                telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_msg)
 
             cache_info['notified_down'] = True
         elif failed_attempts == 0 and notified_down and not notified_restore:
+            msg = generate_back_online_msg(site_name)
+
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
-                telegram_helper.send_message(
-                    config['telegram_bot_token'],
-                    chat_id,
-                    f"*{escape_special_chars(site_name)}* is back online"
-                )
+                telegram_helper.send_message(config['telegram_bot_token'], chat_id, msg)
 
             cache_info['notified_restore'] = True
 
