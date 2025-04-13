@@ -4,6 +4,7 @@ import ssl
 import time
 from datetime import datetime, timezone
 from enum import Enum
+from typing import cast
 from urllib.parse import urlparse
 
 import requests
@@ -84,7 +85,7 @@ def get_server_info():
 
 def generate_curl_command(url: str,
                           follow_redirects: bool,
-                          method: RequestMethod,
+                          method: str,
                           timeout: int,
                           post_data: str = None,
                           headers: dict = None):
@@ -94,12 +95,12 @@ def generate_curl_command(url: str,
     if follow_redirects:
         base += ' -L'
 
-    if method == RequestMethod.HEAD:
+    if method == RequestMethod.HEAD.value:
         return f"{base} --head"
-    elif method == RequestMethod.POST and post_data:
+    elif method == RequestMethod.POST.value and post_data:
         return f"{base} -X POST -d '{post_data}'"
-    elif method != RequestMethod.GET:
-        return f"{base} -X {method.value}"
+    elif method != RequestMethod.GET.value:
+        return f"{base} -X {method}"
 
     return base
 
@@ -116,26 +117,26 @@ def generate_back_online_msg(messages: dict[str, str],
     ).strip()
 
 
-def generate_error_msg(messages: dict[str, str],
-                       err: str,
-                       site_name: str,
-                       url: str,
-                       follow_redirects: bool,
-                       method: RequestMethod,
-                       timeout: int,
-                       post_data: str = None,
-                       headers: dict = None):
+def generate_tg_error_msg(messages: dict[str, str],
+                          err: str,
+                          site_name: str,
+                          url: str,
+                          follow_redirects: bool,
+                          method: str,
+                          timeout: int,
+                          count: int,
+                          post_data: str = None,
+                          headers: dict = None):
     return messages['error'].format(
         site_name=telegram_helper.escape_special_chars(site_name),
         error=telegram_helper.escape_special_chars(err),
         server_info=get_server_info(),
+        count=count,
         curl=generate_curl_command(url, follow_redirects, method, timeout, post_data, headers)
     ).strip()
 
 
-def perform_request(messages: dict[str, str],
-                    site_name: str,
-                    url: str,
+def perform_request(url: str,
                     follow_redirects: bool,
                     method: RequestMethod,
                     status_code: int,
@@ -149,27 +150,9 @@ def perform_request(messages: dict[str, str],
         cert = get_certificate_expiry_with_cache(hostname, parsed_url.port if parsed_url.port else 443)
 
         if cert['error']:
-            return generate_error_msg(messages,
-                                      f"SSL certificate error: {cert['error']}",
-                                      site_name=site_name,
-                                      url=url,
-                                      follow_redirects=follow_redirects,
-                                      method=method,
-                                      timeout=timeout,
-                                      post_data=post_data,
-                                      headers=headers)
+            return f"SSL certificate error: {cert['error']}"
         elif not cert['is_valid']:
-            return generate_error_msg(
-                messages,
-                f"SSL certificate has expired or is not yet valid: {cert['not_before']} - {cert['not_after']}",
-                site_name=site_name,
-                url=url,
-                follow_redirects=follow_redirects,
-                method=method,
-                timeout=timeout,
-                post_data=post_data,
-                headers=headers
-            )
+            return f"SSL certificate has expired or is not yet valid: {cert['not_before']} - {cert['not_after']}"
 
     try:
         if method == RequestMethod.GET:
@@ -179,51 +162,19 @@ def perform_request(messages: dict[str, str],
         elif method == RequestMethod.HEAD:
             res = requests.head(url, timeout=timeout, headers=headers, allow_redirects=follow_redirects)
         else:
-            return generate_error_msg(messages,
-                                      'Invalid request method.',
-                                      site_name=site_name,
-                                      url=url,
-                                      follow_redirects=follow_redirects,
-                                      method=method,
-                                      timeout=timeout,
-                                      post_data=post_data,
-                                      headers=headers)
+            return 'Invalid request method.'
 
         if res.status_code != status_code:
-            return generate_error_msg(messages,
-                                      f"Expected status code '{status_code}', but got '{res.status_code}'",
-                                      site_name=site_name,
-                                      url=url,
-                                      follow_redirects=follow_redirects,
-                                      method=method,
-                                      timeout=timeout,
-                                      post_data=post_data,
-                                      headers=headers)
+            return f"Expected status code '{status_code}', but got '{res.status_code}'"
 
         # Only search for the string if it's a GET or POST request
         if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in res.text:
-            return generate_error_msg(messages,
-                                      f"The string '{search}' not found in the response.",
-                                      site_name=site_name,
-                                      url=url,
-                                      follow_redirects=follow_redirects,
-                                      method=method,
-                                      timeout=timeout,
-                                      post_data=post_data,
-                                      headers=headers)
+            return f"The string '{search}' not found in the response."
 
         return None
 
     except requests.exceptions.RequestException as e:
-        return generate_error_msg(messages,
-                                  f"An error occurred: {e}",
-                                  site_name=site_name,
-                                  url=url,
-                                  follow_redirects=follow_redirects,
-                                  method=method,
-                                  timeout=timeout,
-                                  post_data=post_data,
-                                  headers=headers)
+        return f'An error occurred: {e}'
 
 
 def should_run(schedule: str) -> bool:
@@ -367,7 +318,7 @@ def main():
         check_writing_to_cache()
     else:
         cache = load_cache()
-        process_each_site(config, messages, cache, force=args.force)
+        process_each_site(config, cache, force=args.force)
         save_cache(cache)
         process_cache(cache, config, messages)
         save_cache(cache)
@@ -384,21 +335,30 @@ def process_cache(cache, config, messages):
         notify_after_attempt = site.get('notify_after_attempt', DEFAULT['notify_after_attempt'])
 
         if failed_attempts > 0 and time.time() - cache_info['last_checked_at'] >= 59:
-            process_site(messages, site, site_name, cache)
+            process_site(site, site_name, cache)
 
         notified_down = cache_info.get('notified_down', None)
         notified_restore = cache_info.get('notified_restore', None)
 
         if failed_attempts >= notify_after_attempt and not notified_down:
-            error_msg = cache_info['last_error'] + messages['error_suffix'].format(count=failed_attempts)
+            tg_error_msg = generate_tg_error_msg(messages,
+                                                 cache_info['last_error']['msg'],
+                                                 site_name=cache_info['last_error']['site_name'],
+                                                 url=cache_info['last_error']['url'],
+                                                 follow_redirects=cache_info['last_error']['follow_redirects'],
+                                                 method=cache_info['last_error']['method'],
+                                                 timeout=cache_info['last_error']['timeout'],
+                                                 post_data=cache_info['last_error']['post_data'],
+                                                 headers=cache_info['last_error']['headers'],
+                                                 count=failed_attempts)
 
             for chat_id in get_uniq_chat_ids(site['tg_chats_to_notify']):
-                telegram_helper.send_message(config['telegram_bot_token'], chat_id, error_msg)
+                telegram_helper.send_message(config['telegram_bot_token'], chat_id, tg_error_msg)
 
             cache_info['notified_down'] = int(time.time())
             cache_info['failed_attempts'] = failed_attempts
             cache_info['notified_restore'] = None
-        elif cache_info['last_error'] == '' and notified_down and not notified_restore:
+        elif cache_info['last_error'] is None and notified_down and not notified_restore:
             msg = generate_back_online_msg(messages=messages,
                                            site_name=site_name,
                                            failed_attempts=cache_info['failed_attempts'],
@@ -411,7 +371,7 @@ def process_cache(cache, config, messages):
             cache_info['failed_attempts'] = 0
 
 
-def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
+def process_site(site, site_name: str, cache: dict):
     method_raw = site.get('method', None)
 
     if method_raw:
@@ -421,17 +381,20 @@ def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
     else:
         method = RequestMethod.GET
 
+    follow_redirects = site.get('follow_redirects', DEFAULT['follow_redirects'])
+    timeout: int = cast(int, site.get('timeout', DEFAULT['timeout']))
+    post_data: str | None = cast(str, site.get('post_data', DEFAULT['post_data']))
+    headers = site.get('headers', DEFAULT['headers'])
+
     error_message = perform_request(
-        messages=messages,
-        site_name=site_name,
         url=site['url'],
-        follow_redirects=site.get('follow_redirects', DEFAULT['follow_redirects']),
+        follow_redirects=follow_redirects,
         method=method,
         status_code=site.get('status_code', DEFAULT['status_code']),
         search=site.get('search_string', DEFAULT['search_string']),
-        timeout=site.get('timeout', DEFAULT['timeout']),
-        post_data=site.get('post_data', DEFAULT['post_data']),
-        headers=site.get('headers', DEFAULT['headers'])
+        timeout=timeout,
+        post_data=post_data,
+        headers=headers
     )
 
     if site_name not in cache:
@@ -445,6 +408,8 @@ def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
     else:
         cache[site_name]['last_checked_at'] = int(time.time())
 
+    color_text(site_name + ':', Color.QUOTATION)
+
     if error_message:
         if cache[site_name]['failed_attempts'] == 0:
             cache[site_name]['failed_attempts'] = 1
@@ -453,17 +418,27 @@ def process_site(messages: dict[str, str], site, site_name: str, cache: dict):
         else:
             cache[site_name]['failed_attempts'] += 1
 
-        cache[site_name]['last_error'] = error_message
+        cache[site_name]['last_error'] = {
+            'msg': error_message,
+            'site_name': site_name,
+            'url': site['url'],
+            'follow_redirects': follow_redirects,
+            'method': method.value,
+            'timeout': timeout,
+            'post_data': post_data,
+            'headers': headers
+        }
+
         color_text(error_message, Color.ERROR)
     else:
-        cache[site_name]['last_error'] = ''
-        color_text(f"Request to {site_name} completed successfully.", Color.SUCCESS)
+        cache[site_name]['last_error'] = None
+        color_text(f"Request completed successfully", Color.SUCCESS)
 
 
-def process_each_site(config, messages: dict[str, str], cache: dict, force=False):
+def process_each_site(config, cache: dict, force=False):
     for site_name, site in config['sites'].items():
         if force or should_run(site.get('schedule', DEFAULT['schedule'])):
-            process_site(messages, site, site_name, cache)
+            process_site(site, site_name, cache)
 
 
 if __name__ == "__main__":
