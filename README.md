@@ -279,6 +279,10 @@ sites:
   - Duration of downtime (in minutes)
   - Number of failed checks
 - 📆 After recovery, monitoring returns to your custom schedule — fully automated.
+- 
+### 💬 Contributing
+
+Found a bug? Want a new feature? [Open an issue](https://github.com/pohape/self-hosted-tg-alerts-uptime-monitor/issues) or submit a PR!
 
 
 
