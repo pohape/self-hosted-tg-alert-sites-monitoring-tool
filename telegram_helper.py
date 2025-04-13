@@ -31,7 +31,7 @@ def id_bot(config: dict):
 
     color_text('➡️ To get your personal ID:', Color.QUOTATION)
     color_text(f'   Send any message to your bot.', Color.SUCCESS)
-    color_text('   You’ll receive the your TG ID to use in `tg_chats_to_notify`.', Color.SUCCESS)
+    color_text('   You’ll receive your TG ID to use in `tg_chats_to_notify`.', Color.SUCCESS)
     print()
     color_text('➡️ To get a group or channel ID:', Color.QUOTATION)
     color_text('   1. Add your bot to the target group/channel.', Color.SUCCESS)
