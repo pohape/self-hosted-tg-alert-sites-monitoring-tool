@@ -75,39 +75,31 @@ sites:
 ```
 
 ##### 🧪 5. Validate the config
-Check for any missing fields or mistakes:
+This will validate the configuration for each site and display any issues:
 ```shell
 python3 run.py --check-config
 ```
 
-This will validate the configuration for each site and display any issues.
-
-##### 6. Test sending notifications to all Telegram chats specified in the configuration:
-
+##### 📬 6. Send a test notification
+Make sure Telegram alerts work:
 ```shell
 python3 run.py --test-notifications
 ```
+You’ll get a test message in every listed chat — or a clear error if something’s wrong.
 
-This will send a test message to all chat IDs listed in the **tg_chats_to_notify** section of the configuration file.
-You will see a full Telegram API error text if something won't succeed. In case of failure, the full Telegram API error
-text will be shown, allowing you to debug easily.
-
-##### 7. Run the script once manually to check all sites immediately:
-
+##### 🚀 7. Run a manual check (optional)
+Force a one-time check of all sites:
 ```shell
 python3 run.py --force
 ```
 
-This will check all sites listed in the configuration file regardless of their schedule.
-
-##### 8. Add the script to your crontab to run it every minute:
-
+##### 🕒 8. Add to crontab
+Run every minute using cron:
 ```shell
 crontab -e
 ```
 
-Add the following line:
-
+Add this line:
 ```shell
 * * * * * python3 /path/to/self-hosted-tg-alert-sites-monitoring-tool/run.py
 ```
