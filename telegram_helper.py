@@ -6,9 +6,34 @@ import requests
 from console_helper import Color, color_text
 
 
-def id_bot(config):
-    color_text('To see your user ID, go to Telegram and start the bot, and to view the ID of a message source, '
-               'forward a message from a group/channel or another user.', Color.WARNING)
+def get_bot_link(config: dict) -> str:
+    url = f"https://api.telegram.org/bot{config['telegram_bot_token']}/getMe"
+    response = requests.get(url).json()
+
+    if response.get("ok") and "result" in response:
+        username = response["result"].get("username")
+        if username:
+            return f"https://t.me/{username}"
+    return "Could not determine bot link"
+
+
+def id_bot(config: dict):
+    color_text('➡️ Your bot link:', Color.QUOTATION)
+    print('   ' + get_bot_link(config))
+    print()
+
+    color_text('➡️ To get your personal ID:', Color.QUOTATION)
+    color_text(f'   Send any message to your bot.', Color.SUCCESS)
+    color_text('   You’ll receive the your TG ID to use in `tg_chats_to_notify`.', Color.SUCCESS)
+    print()
+    color_text('➡️ To get a group or channel ID:', Color.QUOTATION)
+    color_text('   1. Add your bot to the target group/channel.', Color.SUCCESS)
+    color_text('   2. Forward *any* message from that group/channel to the bot.', Color.SUCCESS)
+    color_text('   You’ll receive the group/channel ID to use in `tg_chats_to_notify`.', Color.SUCCESS)
+    print()
+    color_text('💡 Press Ctrl+C to stop the bot when done.', Color.WARNING)
+    print()
+
     last_update_id = None
 
     while True:
