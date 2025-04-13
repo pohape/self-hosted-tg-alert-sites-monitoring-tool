@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 from typing import Protocol, runtime_checkable, cast
 
 import yaml
@@ -21,7 +22,12 @@ class Writer(Protocol):
 
 
 def get_cache_path():
-    return os.path.join('/tmp', 'self-hosted-tg-alert-sites-monitoring-tool.json')
+    if platform.system() == 'Windows':
+        base_dir = os.environ.get('TEMP') or os.environ.get('TMP') or 'C:\\Temp'
+    else:
+        base_dir = '/tmp'
+
+    return os.path.join(base_dir, 'self-hosted-tg-alert-sites-monitoring-tool.json')
 
 
 def load_cache():
