@@ -271,15 +271,14 @@ sites:
 - **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
 - **notify_after_attempt** (optional, default is 1): Number of consecutive failures required before a Telegram alert is sent. Helps to reduce false alarms from temporary glitches.
 
-### Recovery Notifications
+### 🔄 Smart Recovery Notifications
 
-If a site fails consecutively for the configured number of times (*notify_after_attempt*), a single Telegram alert is sent to the specified chat(s). After that:
+- 🚨 One alert after N consecutive failures (no spam or duplicate messages)
+- 🔁 Continues checking once a minute during downtime (ignoring the original schedule temporarily)
+- ✅ "Back online" message sent when site recovers, with:
+  - Duration of downtime (in minutes)
+  - Number of failed checks
+- 📆 After recovery, monitoring returns to your custom schedule — fully automated.
 
-- The site continues to be checked every minute regardless of its original schedule.
-- No duplicate alerts are sent while it's still failing.
-- When the site recovers and passes a check again:
-   - A "back online" notification is sent to the same Telegram chat(s).
-   - Monitoring continues as usual.
 
-This ensures you're notified of outages only once and informed when the issue is resolved — without unnecessary spam.
 
