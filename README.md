@@ -1,87 +1,107 @@
-## Self-hosted sites monitoring tool with Telegram alerts on errors
-This is a self-hosted site monitoring tool that checks the availability of websites using GET, POST, and HEAD requests. The tool looks for a specified text on the monitored page, as defined in the configuration. It sends notifications to specified Telegram accounts (or channels/chats) and allows you to flexibly schedule monitoring tasks using a cron-like schedule.
+## 🛡️ Self-hosted Website Uptime Monitor with Telegram Alerts on errors
 
-### Features
+💬 Monitor your websites using **GET/POST/HEAD** requests, verify **SSL certificates**, and check for **specific content** — all configured via a simple YAML file.  
+Get instant **Telegram alerts** after N failures and a recovery notification when the site is back online.  
+**No cloud. No lock-in. No Docker. Just Python + crontab.**
 
-- **Multiple HTTP Methods**: Supports GET, POST, and HEAD requests for monitoring website availability.
-- **SSL Certificate Monitoring**: Automatically verifies the validity of HTTPS certificates, ensuring they are properly configured and up to date.
-- **Custom Headers**: Allows the inclusion of custom HTTP headers in requests.
-- **Content Validation**: Searches for specified text on the monitored page to ensure content validity.
-- **Telegram Notifications**: Sends alerts to Telegram after N failed checks (configurable per site), and a notification when the site is back online.
-- **Flexible Scheduling**: Schedule monitoring tasks using cron-like syntax.
-- **Easy Configuration**: Customizable through a YAML configuration file.
-- **Debug Modes**: Offers debug modes to effortlessly identify required Telegram chat IDs, debug Telegram API token configuration, and test everything without hassle.
+---
 
-### Quick start
+### 🏠 Why Self-Hosted?
 
-##### 1. Clone the Repository and Install Dependencies
+- ✅ Runs anywhere — no Docker or containers needed
+- ✅ No third-party APIs or subscriptions
+- ✅ Full control, full privacy
+
+---
+
+### 🔧 Perfect for:
+
+- Internal tools & dashboards
+- APIs that shouldn’t go unnoticed
+- Low-cost uptime monitoring (no external services)
+
+---
+
+### 🚀 Features
+
+- 🔁 **HTTP Methods**: GET, POST, HEAD
+- 🔐 **SSL Certificate Expiry Checks**
+- 🧠 **Content Validation**: Search for a string in the response
+- 🛠️ **Custom Headers** & POST data
+- 🕒 **Flexible Cron Scheduling** per site
+- 💬 **Telegram Alerts** on errors & recovery
+- ⚙️ **YAML-Based Config** — easy to read, edit, and version
+- 🧪 **Debug/Test Modes** to simplify setup
+
+---
+
+### ⚡ Quick Start
+Spin up your own uptime monitor with Telegram alerts in just a few steps:
+##### 🔧 1. Clone the repo & install dependencies
 
 ```shell
-git clone https://github.com/pohape/self-hosted-tg-alert-sites-monitoring-tool
-cd self-hosted-tg-alert-sites-monitoring-tool
+git clone https://github.com/pohape/self-hosted-tg-alerts-uptime-monitor
+cd self-hosted-tg-alerts-uptime-monitor
 pip3 install -r requirements.txt
 ```
 
-##### 2. Create a new bot by chatting with [@BotFather](https://t.me/BotFather) on Telegram. Follow the instructions to obtain your bot token. Add the token to the configuration file:
-
+##### 🤖 2. Create a Telegram bot
+Chat with [@BotFather](https://t.me/BotFather), create a new bot, and copy the token. Then create a **config.yaml** file:
 ```shell
 echo "telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'" > config.yaml
 ```
 
-##### 3. Run the script with the --id-bot-mode option to get your chat ID:
-
+##### 🆔 3. Get your Telegram chat ID
+Start the bot in ID mode to find out your user/chat ID:
 ```shell
 python3 run.py --id-bot-mode
 ```
-Obtain your user or chat ID by sending a message to the bot or forwarding a message to the bot running in this mode. Then press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop the bot.
-##### 4. Update the config.yaml file with your bot token and add a site to monitor:
+➡️ Send any message to your bot, or forward a message from the group where you want to receive notifications.
+🛠️ If you want to receive notifications in a group, make sure the bot has been added to that group.
+✂️ Switch to the terminal and press <kbd>Ctrl</kbd>+<kbd>C</kbd> — your ID will appear in the terminal.
+
+##### ✍️ 4. Add a site to monitor
+Edit **config.yaml** and define your site(s):
 
 ```yaml
-telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+telegram_bot_token: 'YOUR_BOT_TOKEN_HERE'
+
 sites:
-  main_page:
-    url: "https://example.com/"
+  homepage:
+    url: "https://example.com"
     search_string: "Example Domain"
     tg_chats_to_notify:
-      - '123456789'
+      - '123456789'  # your Telegram user or chat ID
 ```
 
-##### 5. Check the configuration file for any missing or incorrect settings:
-
+##### 🧪 5. Validate the config
+This will validate the configuration for each site and display any issues:
 ```shell
 python3 run.py --check-config
 ```
 
-This will validate the configuration for each site and display any issues.
-
-##### 6. Test sending notifications to all Telegram chats specified in the configuration:
-
+##### 📬 6. Send a test notification
+Make sure Telegram alerts work:
 ```shell
 python3 run.py --test-notifications
 ```
+You’ll get a test message in every listed chat — or a clear error if something’s wrong.
 
-This will send a test message to all chat IDs listed in the **tg_chats_to_notify** section of the configuration file.
-You will see a full Telegram API error text if something won't succeed. In case of failure, the full Telegram API error
-text will be shown, allowing you to debug easily.
-
-##### 7. Run the script once manually to check all sites immediately:
-
+##### 🚀 7. Run a manual check (optional)
+Force a one-time check of all sites:
 ```shell
 python3 run.py --force
 ```
 
-This will check all sites listed in the configuration file regardless of their schedule.
-
-##### 8. Add the script to your crontab to run it every minute:
-
+##### 🕒 8. Add to crontab
+Run every minute using cron:
 ```shell
 crontab -e
 ```
 
-Add the following line:
-
+Add this line:
 ```shell
-* * * * * python3 /path/to/self-hosted-tg-alert-sites-monitoring-tool/run.py
+* * * * * python3 /path/to/self-hosted-tg-alerts-uptime-monitor/run.py
 ```
 
 ### Usage
@@ -109,6 +129,7 @@ python3 run.py --id-bot-mode
 ```shell
 python3 run.py --force
 ```
+Example results:
 ```diff
 + Request to home_page completed successfully.
 
@@ -121,6 +142,7 @@ python3 run.py --force
 ```shell
 python3 run.py --check-config
 ```
+Example results:
 ```diff
 @@ home_page @@
 !  timeout: not found, default value is '5'
@@ -249,15 +271,18 @@ sites:
 - **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
 - **notify_after_attempt** (optional, default is 1): Number of consecutive failures required before a Telegram alert is sent. Helps to reduce false alarms from temporary glitches.
 
-### Recovery Notifications
+### 🔄 Smart Recovery Notifications
 
-If a site fails consecutively for the configured number of times (*notify_after_attempt*), a single Telegram alert is sent to the specified chat(s). After that:
+- 🚨 One alert after N consecutive failures (no spam or duplicate messages)
+- 🔁 Continues checking once a minute during downtime (ignoring the original schedule temporarily)
+- ✅ "Back online" message sent when site recovers, with:
+  - Duration of downtime (in minutes)
+  - Number of failed checks
+- 📆 After recovery, monitoring returns to your custom schedule — fully automated.
+- 
+### 💬 Contributing
 
-- The site continues to be checked every minute regardless of its original schedule.
-- No duplicate alerts are sent while it's still failing.
-- When the site recovers and passes a check again:
-   - A "back online" notification is sent to the same Telegram chat(s).
-   - Monitoring continues as usual.
+Found a bug? Want a new feature? [Open an issue](https://github.com/pohape/self-hosted-tg-alerts-uptime-monitor/issues) or submit a PR!
 
-This ensures you're notified of outages only once and informed when the issue is resolved — without unnecessary spam.
+
 
