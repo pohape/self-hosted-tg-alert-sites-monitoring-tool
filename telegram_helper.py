@@ -126,8 +126,7 @@ def send_message(bot_token, chat_id, message):
     response_parsed = response.json()
 
     if response_parsed['ok']:
-        color_text(f"A message sent to {chat_id} successfully:", Color.SUCCESS)
-        color_text(message, Color.QUOTATION)
+        color_text(f"A message sent to {chat_id} successfully.", Color.SUCCESS)
 
         return None
     else:
