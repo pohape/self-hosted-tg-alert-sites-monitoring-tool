@@ -11,7 +11,7 @@ from croniter import croniter, CroniterBadCronError, CroniterBadDateError
 
 import telegram_helper
 from console_helper import Color, color_text
-from filesystem_helper import save_cache, CACHE_FILE_NAME, load_yaml_or_exit, load_cache
+from filesystem_helper import save_cache, load_yaml_or_exit, load_cache, get_cache_path
 
 CONFIG_FILE_NAME = 'config.yaml'
 MESSAGES_FILE_NAME = 'messages.yaml'
@@ -245,7 +245,7 @@ def check_writing_to_cache():
     try:
         save_cache({})
     except Exception as e:
-        color_text(f"Error saving cache, check permissions: {CACHE_FILE_NAME}\n{e}", Color.ERROR)
+        color_text(f"Error saving cache, check permissions: {get_cache_path()}\n{e}", Color.ERROR)
 
         return False
 

@@ -4,8 +4,6 @@ from typing import Protocol, runtime_checkable, cast
 
 import yaml
 
-CACHE_FILE_NAME = 'cache.json'
-
 
 def load_yaml_or_exit(file_name: str):
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name)
@@ -22,12 +20,12 @@ class Writer(Protocol):
     def write(self, __s: str) -> int: ...
 
 
-def get_path():
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), CACHE_FILE_NAME)
+def get_cache_path():
+    return os.path.join('/tmp', 'self-hosted-tg-alert-sites-monitoring-tool.json')
 
 
 def load_cache():
-    path = get_path()
+    path = get_cache_path()
 
     if not os.path.isfile(path):
         return {}
@@ -36,6 +34,6 @@ def load_cache():
 
 
 def save_cache(cache: dict) -> None:
-    with open(get_path(), 'w', encoding='utf-8') as f:
+    with open(get_cache_path(), 'w', encoding='utf-8') as f:
         writer = cast(Writer, f)
         json.dump(cache, writer, indent=2)
