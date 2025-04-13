@@ -129,6 +129,7 @@ python3 run.py --id-bot-mode
 ```shell
 python3 run.py --force
 ```
+Example results:
 ```diff
 + Request to home_page completed successfully.
 
@@ -141,6 +142,7 @@ python3 run.py --force
 ```shell
 python3 run.py --check-config
 ```
+Example results:
 ```diff
 @@ home_page @@
 !  timeout: not found, default value is '5'
