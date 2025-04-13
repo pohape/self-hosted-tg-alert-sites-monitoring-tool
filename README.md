@@ -14,6 +14,14 @@ Get instant **Telegram alerts** after N failures and a recovery notification whe
 
 ---
 
+### 🔧 Perfect for:
+
+- Internal tools & dashboards
+- APIs that shouldn’t go unnoticed
+- Low-cost uptime monitoring (no external services)
+
+---
+
 ### 🚀 Features
 
 - 🔁 **HTTP Methods**: GET, POST, HEAD
@@ -24,6 +32,8 @@ Get instant **Telegram alerts** after N failures and a recovery notification whe
 - 💬 **Telegram Alerts** on errors & recovery
 - ⚙️ **YAML-Based Config** — easy to read, edit, and version
 - 🧪 **Debug/Test Modes** to simplify setup
+
+---
 
 ### Quick start
 
