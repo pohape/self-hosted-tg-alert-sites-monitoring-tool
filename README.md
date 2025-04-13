@@ -35,9 +35,9 @@ Get instant **Telegram alerts** after N failures and a recovery notification whe
 
 ---
 
-### Quick start
-
-##### 1. Clone the Repository and Install Dependencies
+### ⚡ Quick Start
+Spin up your own uptime monitor with Telegram alerts in just a few steps:
+##### 🔧 1. Clone the repo & install dependencies
 
 ```shell
 git clone https://github.com/pohape/self-hosted-tg-alert-sites-monitoring-tool
@@ -45,32 +45,37 @@ cd self-hosted-tg-alert-sites-monitoring-tool
 pip3 install -r requirements.txt
 ```
 
-##### 2. Create a new bot by chatting with [@BotFather](https://t.me/BotFather) on Telegram. Follow the instructions to obtain your bot token. Add the token to the configuration file:
-
+##### 🤖 2. Create a Telegram bot
+Chat with [@BotFather](https://t.me/BotFather), create a new bot, and copy the token. Then create a **config.yaml** file:
 ```shell
 echo "telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'" > config.yaml
 ```
 
-##### 3. Run the script with the --id-bot-mode option to get your chat ID:
-
+##### 🆔 3. Get your Telegram chat ID
+Start the bot in ID mode to find out your user/chat ID:
 ```shell
 python3 run.py --id-bot-mode
 ```
-Obtain your user or chat ID by sending a message to the bot or forwarding a message to the bot running in this mode. Then press <kbd>Ctrl</kbd>+<kbd>C</kbd> to stop the bot.
-##### 4. Update the config.yaml file with your bot token and add a site to monitor:
+➡️ Send any message to your bot, or forward a message from the group where you want to receive notifications.
+🛠️ If you want to receive notifications in a group, make sure the bot has been added to that group.
+✂️ Switch to the terminal and press <kbd>Ctrl</kbd>+<kbd>C</kbd> — your ID will appear in the terminal.
+
+##### ✍️ 4. Add a site to monitor
+Edit **config.yaml** and define your site(s):
 
 ```yaml
-telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'
+telegram_bot_token: 'YOUR_BOT_TOKEN_HERE'
+
 sites:
-  main_page:
-    url: "https://example.com/"
+  homepage:
+    url: "https://example.com"
     search_string: "Example Domain"
     tg_chats_to_notify:
-      - '123456789'
+      - '123456789'  # your Telegram user or chat ID
 ```
 
-##### 5. Check the configuration file for any missing or incorrect settings:
-
+##### 🧪 5. Validate the config
+Check for any missing fields or mistakes:
 ```shell
 python3 run.py --check-config
 ```
