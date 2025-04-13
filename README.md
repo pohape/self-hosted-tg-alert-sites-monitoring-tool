@@ -1,16 +1,29 @@
-## Self-hosted sites monitoring tool with Telegram alerts on errors
-This is a self-hosted site monitoring tool that checks the availability of websites using GET, POST, and HEAD requests. The tool looks for a specified text on the monitored page, as defined in the configuration. It sends notifications to specified Telegram accounts (or channels/chats) and allows you to flexibly schedule monitoring tasks using a cron-like schedule.
+# 🛡️ Self-hosted Uptime Monitor with Telegram Alerts
 
-### Features
+💬 Monitor your websites using **GET/POST/HEAD** requests, verify **SSL certificates**, and check for **specific content** — all configured via a simple YAML file.  
+Get instant **Telegram alerts** after N failures and a recovery notification when the site is back online.  
+**No cloud. No lock-in. No Docker. Just Python + crontab.**
 
-- **Multiple HTTP Methods**: Supports GET, POST, and HEAD requests for monitoring website availability.
-- **SSL Certificate Monitoring**: Automatically verifies the validity of HTTPS certificates, ensuring they are properly configured and up to date.
-- **Custom Headers**: Allows the inclusion of custom HTTP headers in requests.
-- **Content Validation**: Searches for specified text on the monitored page to ensure content validity.
-- **Telegram Notifications**: Sends alerts to Telegram after N failed checks (configurable per site), and a notification when the site is back online.
-- **Flexible Scheduling**: Schedule monitoring tasks using cron-like syntax.
-- **Easy Configuration**: Customizable through a YAML configuration file.
-- **Debug Modes**: Offers debug modes to effortlessly identify required Telegram chat IDs, debug Telegram API token configuration, and test everything without hassle.
+---
+
+### 🏠 Why Self-Hosted?
+
+- ✅ Runs anywhere — no Docker or containers needed
+- ✅ No third-party APIs or subscriptions
+- ✅ Full control, full privacy
+
+---
+
+### 🚀 Features
+
+- 🔁 **HTTP Methods**: GET, POST, HEAD
+- 🔐 **SSL Certificate Expiry Checks**
+- 🧠 **Content Validation**: Search for a string in the response
+- 🛠️ **Custom Headers** & POST data
+- 🕒 **Flexible Cron Scheduling** per site
+- 💬 **Telegram Alerts** on errors & recovery
+- ⚙️ **YAML-Based Config** — easy to read, edit, and version
+- 🧪 **Debug/Test Modes** to simplify setup
 
 ### Quick start
 
