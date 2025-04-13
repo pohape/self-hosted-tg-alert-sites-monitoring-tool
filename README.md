@@ -40,8 +40,8 @@ Spin up your own uptime monitor with Telegram alerts in just a few steps:
 ##### 🔧 1. Clone the repo & install dependencies
 
 ```shell
-git clone https://github.com/pohape/self-hosted-tg-alert-sites-monitoring-tool
-cd self-hosted-tg-alert-sites-monitoring-tool
+git clone https://github.com/pohape/self-hosted-tg-alerts-uptime-monitor
+cd self-hosted-tg-alerts-uptime-monitor
 pip3 install -r requirements.txt
 ```
 
@@ -101,7 +101,7 @@ crontab -e
 
 Add this line:
 ```shell
-* * * * * python3 /path/to/self-hosted-tg-alert-sites-monitoring-tool/run.py
+* * * * * python3 /path/to/self-hosted-tg-alerts-uptime-monitor/run.py
 ```
 
 ### Usage
