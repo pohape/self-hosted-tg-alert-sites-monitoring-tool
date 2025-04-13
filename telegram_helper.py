@@ -12,14 +12,21 @@ def get_bot_link(config: dict) -> str:
 
     if response.get("ok") and "result" in response:
         username = response["result"].get("username")
+
         if username:
             return f"https://t.me/{username}"
+    else:
+        error_message = response.get("description", "Unknown error")
+        color_text(f"TG API error: {error_message}", Color.ERROR)
+        exit()
+
     return "Could not determine bot link"
 
 
 def id_bot(config: dict):
+    link = get_bot_link(config)
     color_text('➡️ Your bot link:', Color.QUOTATION)
-    print('   ' + get_bot_link(config))
+    print('   ' + link)
     print()
 
     color_text('➡️ To get your personal ID:', Color.QUOTATION)
