@@ -1,4 +1,4 @@
-# 🛡️ Self-hosted Uptime Monitor with Telegram Alerts
+## 🛡️ Self-hosted Website Uptime Monitor with Telegram Alerts on errors
 
 💬 Monitor your websites using **GET/POST/HEAD** requests, verify **SSL certificates**, and check for **specific content** — all configured via a simple YAML file.  
 Get instant **Telegram alerts** after N failures and a recovery notification when the site is back online.  
