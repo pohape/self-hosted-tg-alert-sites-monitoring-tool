@@ -63,7 +63,7 @@ Start the bot in ID mode to find out your user/chat ID:
 ```shell
 python3 run.py --id-bot-mode
 ```
-➡️ Send any message to your bot, or forward a message from the group where you want to receive notifications.
+➡️ Send any message to your bot, or forward a message from the group where you want to receive notifications.  
 🛠️ If you want to receive notifications in a group, make sure the bot has been added to that group.
 ![Step 4](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step4.gif)
 
