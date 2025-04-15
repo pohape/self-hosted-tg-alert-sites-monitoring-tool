@@ -82,26 +82,25 @@ sites:
 ```
 ![Step 5](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step5.gif)
 
-#### 🧪 6. Validate the config
+#### 💯 6. Test your setup
 This will validate the configuration for each site and display any issues:
 ```shell
 python3 run.py --check-config
 ```
-
-#### 📬 7. Send a test notification
 Make sure Telegram alerts work:
 ```shell
 python3 run.py --test-notifications
 ```
 You’ll get a test message in every listed chat — or a clear error if something’s wrong.
+![Step 6](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step6.gif)
 
-#### 🚀 8. Run a manual check (optional)
+#### 🚀 7. Run a manual check (optional)
 Force a one-time check of all sites:
 ```shell
 python3 run.py --force
 ```
 
-#### 🕒 9. Add to crontab
+#### 🕒 8. Add to crontab
 Enter your crontab:
 ```shell
 crontab -e
