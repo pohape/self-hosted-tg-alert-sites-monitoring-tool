@@ -37,8 +37,7 @@ Get instant **Telegram alerts** after N failures and a recovery notification whe
 
 ### ⚡ Quick Start
 Spin up your own uptime monitor with Telegram alerts in just a few steps:
-##### 🔧 1. Clone the repo & install dependencies
-
+#### 🔧 1. Clone the repo & install dependencies
 ```shell
 git clone https://github.com/pohape/self-hosted-tg-alerts-uptime-monitor
 cd self-hosted-tg-alerts-uptime-monitor
@@ -46,23 +45,25 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+![Step 1](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step1.gif)
 
-##### 🤖 2. Create a Telegram bot
+#### 🤖 2. Create a Telegram bot
 Chat with [@BotFather](https://t.me/BotFather), create a new bot, and copy the token. Then create a **config.yaml** file:
 ```shell
 echo "telegram_bot_token: '12345:SDGFFHWRE-EW3b16Q'" > config.yaml
 ```
+![Step 2](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step2.gif)
 
-##### 🆔 3. Get your Telegram chat ID
+#### 🆔 3. Get your Telegram chat ID
 Start the bot in ID mode to find out your user/chat ID:
 ```shell
 python3 run.py --id-bot-mode
 ```
 ➡️ Send any message to your bot, or forward a message from the group where you want to receive notifications.
 🛠️ If you want to receive notifications in a group, make sure the bot has been added to that group.
-✂️ Switch to the terminal and press <kbd>Ctrl</kbd>+<kbd>C</kbd> — your ID will appear in the terminal.
+![Step 3](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step3.gif)
 
-##### ✍️ 4. Add a site to monitor
+#### ✍️ 4. Add a site to monitor
 Edit **config.yaml** and define your site(s):
 
 ```yaml
@@ -75,27 +76,28 @@ sites:
     tg_chats_to_notify:
       - '123456789'  # your Telegram user or chat ID
 ```
+![Step 4](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step4.gif)
 
-##### 🧪 5. Validate the config
+#### 🧪 5. Validate the config
 This will validate the configuration for each site and display any issues:
 ```shell
 python3 run.py --check-config
 ```
 
-##### 📬 6. Send a test notification
+#### 📬 6. Send a test notification
 Make sure Telegram alerts work:
 ```shell
 python3 run.py --test-notifications
 ```
 You’ll get a test message in every listed chat — or a clear error if something’s wrong.
 
-##### 🚀 7. Run a manual check (optional)
+#### 🚀 7. Run a manual check (optional)
 Force a one-time check of all sites:
 ```shell
 python3 run.py --force
 ```
 
-##### 🕒 8. Add to crontab
+#### 🕒 8. Add to crontab
 Enter your crontab:
 ```shell
 crontab -e
@@ -108,25 +110,25 @@ Then add this line (replace **/path/to/repo** with the actual path to your clone
 
 ### Usage
 
-##### To run the script normally, simply execute:
+#### To run the script normally, simply execute:
 
 ```shell
 python3 run.py
 ```
 
-##### To test Telegram notifications:
+#### To test Telegram notifications:
 
 ```shell
 python3 run.py --test-notifications
 ```
 
-##### To start the Telegram bot that replies with user IDs using long polling:
+#### To start the Telegram bot that replies with user IDs using long polling:
 
 ```shell
 python3 run.py --id-bot-mode
 ```
 
-##### To force check all sites immediately:
+#### To force check all sites immediately:
 
 ```shell
 python3 run.py --force
@@ -139,7 +141,7 @@ Example results:
 + A message with the error sent to 5487855 successfully
 ```
 
-##### To check the configuration for any issues:
+#### To check the configuration for any issues:
 
 ```shell
 python3 run.py --check-config
