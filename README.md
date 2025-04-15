@@ -94,11 +94,12 @@ python3 run.py --test-notifications
 You’ll get a test message in every listed chat — or a clear error if something’s wrong.
 ![Step 6](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step6.gif)
 
-#### 🚀 7. Run a manual check (optional)
+#### 🚀 7. Run a manual check
 Force a one-time check of all sites:
 ```shell
 python3 run.py --force
 ```
+![Step 7](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step7.gif)
 
 #### 🕒 8. Add to crontab
 Enter your crontab:
