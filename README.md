@@ -113,6 +113,9 @@ Then add this line (replace **/path/to/repo** with the actual path to your clone
 📅 The entry point runs every minute, but each site is checked according to its own schedule, defined in the **config.yaml** using cron syntax
 ![Step 8](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step8.gif)
 
+#### ⏰ 9. Simulate downtime and recovery (optional)
+![Step 9](https://raw.githubusercontent.com/pohape/self-hosted-tg-alerts-uptime-monitor-assets/main/step9.gif)
+
 ### Usage
 
 #### To run the script normally, simply execute:
