@@ -24,6 +24,7 @@ DEFAULT = {
     'status_code': 200,
     'post_data': None,
     'search_string': '',
+    'absent_string': '',
     'headers': {},
     'follow_redirects': False,
     'notify_after_attempt': 1,
@@ -141,6 +142,7 @@ def perform_request(url: str,
                     method: RequestMethod,
                     status_code: int,
                     search: str,
+                    absent: str,
                     timeout: int,
                     post_data: str,
                     headers: dict):
@@ -167,9 +169,12 @@ def perform_request(url: str,
         if res.status_code != status_code:
             return f"Expected status code '{status_code}', but got '{res.status_code}'"
 
-        # Only search for the string if it's a GET or POST request
-        if method in {RequestMethod.GET, RequestMethod.POST} and search and search not in res.text:
-            return f"The string '{search}' not found in the response."
+        # Only for GET/POST: validate content
+        if method in {RequestMethod.GET, RequestMethod.POST}:
+            if search and search not in res.text:
+                return f"The expected string '{search}' was not found in the response."
+            if absent and absent in res.text:
+                return f"The forbidden string '{absent}' was found in the response."
 
         return None
 
@@ -392,6 +397,7 @@ def process_site(site, site_name: str, cache: dict):
         method=method,
         status_code=site.get('status_code', DEFAULT['status_code']),
         search=site.get('search_string', DEFAULT['search_string']),
+        absent=site.get('absent_string', DEFAULT['absent_string']),
         timeout=timeout,
         post_data=post_data,
         headers=headers
