@@ -26,7 +26,9 @@ Get instant **Telegram alerts** after N failures and a recovery notification whe
 
 - 🔁 **HTTP Methods**: GET, POST, HEAD
 - 🔐 **SSL Certificate Expiry Checks**
-- 🧠 **Content Validation**: Search for a string in the response
+- 🧠 **Content Validation**:
+     * ✅ search_string: Verify a specific string is present in the response
+     * ❌ absent_string: Verify a specific string is absent in the response
 - 🛠️ **Custom Headers** & POST data
 - 🕒 **Flexible Cron Scheduling** per site
 - 💬 **Telegram Alerts** on errors & recovery
