@@ -193,6 +193,7 @@ sites:
     url: "https://example.com/"
     follow_redirects: True # Redirects are not followed by default
     search_string: "<body>"
+    absent_string: "Not Found"
     # Notifications will be sent to the frontend group
     tg_chats_to_notify:
       - '1234567890'  # frontend group ID
@@ -279,11 +280,14 @@ sites:
 - **headers** (optional): A dictionary of HTTP headers to include in the request.
 - **post_data** (optional): Only for the POST method.
 - **status_code** (optional, default is 200): An expected HTTP status code.
-- **search_string** (optional): The string to search for in the response (for GET and POST requests).
+- **search_string** (optional): String that must be present in the HTTP response body for the check to pass.
+- **absent_string** (optional): String that must be absent in the HTTP response body for the check to pass. Useful for detecting unexpected errors or messages.
 - **timeout** (optional, default is 5): The timeout for the request in seconds.
 - **schedule** (optional, default is '* * * * *'): The cron-like schedule for monitoring the site.
 - **tg_chats_to_notify**: List of Telegram chat IDs to notify in case of an error.
 - **notify_after_attempt** (optional, default is 1): Number of consecutive failures required before a Telegram alert is sent. Helps to reduce false alarms from temporary glitches.
+
+If both **search_string** and **absent_string** are specified, both conditions must be satisfied for the site check to be considered successful.
 
 ### 🔄 Smart Recovery Notifications
 
